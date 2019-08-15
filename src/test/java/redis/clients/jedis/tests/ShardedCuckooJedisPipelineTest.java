@@ -16,16 +16,11 @@ import java.util.UUID;
 import org.junit.Before;
 import org.junit.Test;
 
-import redis.clients.jedis.HostAndPort;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisShardInfo;
-import redis.clients.jedis.Response;
-import redis.clients.jedis.ShardedJedis;
-import redis.clients.jedis.ShardedJedisPipeline;
-import redis.clients.jedis.Tuple;
+import redis.clients.jedis.*;
+import redis.clients.jedis.CuckooJedis;
 import redis.clients.jedis.exceptions.JedisDataException;
 
-public class ShardedJedisPipelineTest {
+public class ShardedCuckooJedisPipelineTest {
 
   private static HostAndPort redis1 = HostAndPortUtil.getRedisServers().get(0);
   private static HostAndPort redis2 = HostAndPortUtil.getRedisServers().get(1);
@@ -34,14 +29,14 @@ public class ShardedJedisPipelineTest {
 
   @Before
   public void setUp() throws Exception {
-    Jedis jedis = new Jedis(redis1);
-    jedis.auth("foobared");
-    jedis.flushAll();
-    jedis.disconnect();
-    jedis = new Jedis(redis2);
-    jedis.auth("foobared");
-    jedis.flushAll();
-    jedis.disconnect();
+    CuckooJedis cuckooJedis = new CuckooJedis(redis1);
+    cuckooJedis.auth("foobared");
+    cuckooJedis.flushAll();
+    cuckooJedis.disconnect();
+    cuckooJedis = new CuckooJedis(redis2);
+    cuckooJedis.auth("foobared");
+    cuckooJedis.flushAll();
+    cuckooJedis.disconnect();
 
     JedisShardInfo shardInfo1 = new JedisShardInfo(redis1);
     JedisShardInfo shardInfo2 = new JedisShardInfo(redis2);

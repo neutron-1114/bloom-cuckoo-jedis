@@ -12,15 +12,15 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 
+import redis.clients.jedis.CuckooJedis;
 import redis.clients.jedis.HostAndPort;
-import redis.clients.jedis.Jedis;
 import redis.clients.jedis.ClusterReset;
 import redis.clients.jedis.tests.HostAndPortUtil;
 import redis.clients.jedis.tests.utils.JedisClusterTestUtil;
 
 public class ClusterCommandsTest {
-  private static Jedis node1;
-  private static Jedis node2;
+  private static CuckooJedis node1;
+  private static CuckooJedis node2;
 
   private HostAndPort nodeInfo1 = HostAndPortUtil.getClusterServers().get(0);
   private HostAndPort nodeInfo2 = HostAndPortUtil.getClusterServers().get(1);
@@ -28,11 +28,11 @@ public class ClusterCommandsTest {
   @Before
   public void setUp() throws Exception {
 
-    node1 = new Jedis(nodeInfo1);
+    node1 = new CuckooJedis(nodeInfo1);
     node1.auth("cluster");
     node1.flushAll();
 
-    node2 = new Jedis(nodeInfo2);
+    node2 = new CuckooJedis(nodeInfo2);
     node2.auth("cluster");
     node2.flushAll();
   }

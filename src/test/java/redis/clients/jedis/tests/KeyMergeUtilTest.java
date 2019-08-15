@@ -15,7 +15,7 @@ public class KeyMergeUtilTest {
     byte[] key = SafeEncoder.encode("hello");
     byte[][] keys = new byte[2][];
     keys[0] = SafeEncoder.encode("world");
-    keys[1] = SafeEncoder.encode("jedis");
+    keys[1] = SafeEncoder.encode("cuckooJedis");
 
     byte[][] mergedKeys = KeyMergeUtil.merge(key, keys);
     assertNotNull(mergedKeys);
@@ -30,7 +30,7 @@ public class KeyMergeUtilTest {
     String key = "hello";
     String[] keys = new String[2];
     keys[0] = "world";
-    keys[1] = "jedis";
+    keys[1] = "cuckooJedis";
 
     String[] mergedKeys = KeyMergeUtil.merge(key, keys);
     assertNotNull(mergedKeys);

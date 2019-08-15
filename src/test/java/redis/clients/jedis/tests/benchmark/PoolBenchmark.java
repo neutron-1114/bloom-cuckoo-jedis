@@ -6,9 +6,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 
+import redis.clients.jedis.CuckooJedis;
 import redis.clients.jedis.HostAndPort;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.CuckooJedisPool;
 import redis.clients.jedis.tests.HostAndPortUtil;
 
 public class PoolBenchmark {
@@ -16,7 +16,7 @@ public class PoolBenchmark {
   private static final int TOTAL_OPERATIONS = 100000;
 
   public static void main(String[] args) throws Exception {
-    Jedis j = new Jedis(hnp);
+    CuckooJedis j = new CuckooJedis(hnp);
     j.connect();
     j.auth("foobared");
     j.flushAll();
@@ -30,7 +30,7 @@ public class PoolBenchmark {
   }
 
   private static void withPool() throws Exception {
-    final JedisPool pool = new JedisPool(new GenericObjectPoolConfig(), hnp.getHost(),
+    final CuckooJedisPool pool = new CuckooJedisPool(new GenericObjectPoolConfig(), hnp.getHost(),
         hnp.getPort(), 2000, "foobared");
     List<Thread> tds = new ArrayList<Thread>();
 
@@ -40,7 +40,7 @@ public class PoolBenchmark {
         public void run() {
           for (int i = 0; (i = ind.getAndIncrement()) < TOTAL_OPERATIONS;) {
             try {
-              Jedis j = pool.getResource();
+              CuckooJedis j = pool.getResource();
               final String key = "foo" + i;
               j.set(key, key);
               j.get(key);

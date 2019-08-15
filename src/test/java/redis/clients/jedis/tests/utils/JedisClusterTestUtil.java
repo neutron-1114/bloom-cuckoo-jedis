@@ -1,15 +1,15 @@
 package redis.clients.jedis.tests.utils;
 
+import redis.clients.jedis.CuckooJedis;
 import redis.clients.jedis.HostAndPort;
-import redis.clients.jedis.Jedis;
 import redis.clients.jedis.exceptions.JedisException;
 
 public class JedisClusterTestUtil {
-  public static void waitForClusterReady(Jedis... nodes) throws InterruptedException {
+  public static void waitForClusterReady(CuckooJedis... nodes) throws InterruptedException {
     boolean clusterOk = false;
     while (!clusterOk) {
       boolean isOk = true;
-      for (Jedis node : nodes) {
+      for (CuckooJedis node : nodes) {
         if (!node.clusterInfo().split("\n")[0].contains("ok")) {
           isOk = false;
           break;
@@ -43,16 +43,16 @@ public class JedisClusterTestUtil {
     return "";
   }
 
-  public static void assertNodeIsKnown(Jedis node, String targetNodeId, int timeoutMs) {
+  public static void assertNodeIsKnown(CuckooJedis node, String targetNodeId, int timeoutMs) {
     assertNodeRecognizedStatus(node, targetNodeId, true, timeoutMs);
   }
 
-  public static void assertNodeIsUnknown(Jedis node, String targetNodeId, int timeoutMs) {
+  public static void assertNodeIsUnknown(CuckooJedis node, String targetNodeId, int timeoutMs) {
     assertNodeRecognizedStatus(node, targetNodeId, false, timeoutMs);
   }
 
-  private static void assertNodeRecognizedStatus(Jedis node, String targetNodeId,
-      boolean shouldRecognized, int timeoutMs) {
+  private static void assertNodeRecognizedStatus(CuckooJedis node, String targetNodeId,
+                                                 boolean shouldRecognized, int timeoutMs) {
     int sleepInterval = 100;
     for (int sleepTime = 0; sleepTime <= timeoutMs; sleepTime += sleepInterval) {
       boolean known = isKnownNode(node, targetNodeId);
@@ -67,7 +67,7 @@ public class JedisClusterTestUtil {
     throw new JedisException("Node recognize check error");
   }
 
-  private static boolean isKnownNode(Jedis node, String nodeId) {
+  private static boolean isKnownNode(CuckooJedis node, String nodeId) {
     String infoOutput = node.clusterNodes();
     for (String infoLine : infoOutput.split("\n")) {
       if (infoLine.contains(nodeId)) {

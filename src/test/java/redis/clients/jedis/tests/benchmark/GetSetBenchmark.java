@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.Calendar;
 
+import redis.clients.jedis.CuckooJedis;
 import redis.clients.jedis.HostAndPort;
-import redis.clients.jedis.Jedis;
 import redis.clients.jedis.tests.HostAndPortUtil;
 
 public class GetSetBenchmark {
@@ -13,22 +13,22 @@ public class GetSetBenchmark {
   private static final int TOTAL_OPERATIONS = 100000;
 
   public static void main(String[] args) throws UnknownHostException, IOException {
-    Jedis jedis = new Jedis(hnp);
-    jedis.connect();
-    jedis.auth("foobared");
-    jedis.flushAll();
+    CuckooJedis cuckooJedis = new CuckooJedis(hnp);
+    cuckooJedis.connect();
+    cuckooJedis.auth("foobared");
+    cuckooJedis.flushAll();
 
     long begin = Calendar.getInstance().getTimeInMillis();
 
     for (int n = 0; n <= TOTAL_OPERATIONS; n++) {
       String key = "foo" + n;
-      jedis.set(key, "bar" + n);
-      jedis.get(key);
+      cuckooJedis.set(key, "bar" + n);
+      cuckooJedis.get(key);
     }
 
     long elapsed = Calendar.getInstance().getTimeInMillis() - begin;
 
-    jedis.disconnect();
+    cuckooJedis.disconnect();
 
     System.out.println(((1000 * 2 * TOTAL_OPERATIONS) / elapsed) + " ops");
   }

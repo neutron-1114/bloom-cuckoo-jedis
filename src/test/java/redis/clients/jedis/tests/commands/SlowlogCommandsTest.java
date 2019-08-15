@@ -10,16 +10,16 @@ import org.junit.Test;
 
 import redis.clients.jedis.util.Slowlog;
 
-public class SlowlogCommandsTest extends JedisCommandTestBase {
+public class SlowlogCommandsTest extends CuckooJedisCommandTestBase {
 
   @Test
   public void slowlog() {
     // do something
-    jedis.configSet("slowlog-log-slower-than", "0");
-    jedis.set("foo", "bar");
-    jedis.set("foo2", "bar2");
+    cuckooJedis.configSet("slowlog-log-slower-than", "0");
+    cuckooJedis.set("foo", "bar");
+    cuckooJedis.set("foo2", "bar2");
 
-    List<Slowlog> reducedLog = jedis.slowlogGet(1);
+    List<Slowlog> reducedLog = cuckooJedis.slowlogGet(1);
     assertEquals(1, reducedLog.size());
 
     Slowlog log = reducedLog.get(0);
@@ -28,22 +28,22 @@ public class SlowlogCommandsTest extends JedisCommandTestBase {
     assertTrue(log.getExecutionTime() > 0);
     assertNotNull(log.getArgs());
 
-    List<byte[]> breducedLog = jedis.slowlogGetBinary(1);
+    List<byte[]> breducedLog = cuckooJedis.slowlogGetBinary(1);
     assertEquals(1, breducedLog.size());
 
-    List<Slowlog> log1 = jedis.slowlogGet();
-    List<byte[]> blog1 = jedis.slowlogGetBinary();
+    List<Slowlog> log1 = cuckooJedis.slowlogGet();
+    List<byte[]> blog1 = cuckooJedis.slowlogGetBinary();
 
     assertNotNull(log1);
     assertNotNull(blog1);
 
-    long len1 = jedis.slowlogLen();
+    long len1 = cuckooJedis.slowlogLen();
 
-    jedis.slowlogReset();
+    cuckooJedis.slowlogReset();
 
-    List<Slowlog> log2 = jedis.slowlogGet();
-    List<byte[]> blog2 = jedis.slowlogGetBinary();
-    long len2 = jedis.slowlogLen();
+    List<Slowlog> log2 = cuckooJedis.slowlogGet();
+    List<byte[]> blog2 = cuckooJedis.slowlogGetBinary();
+    long len2 = cuckooJedis.slowlogLen();
 
     assertTrue(len1 > len2);
     assertTrue(log1.size() > log2.size());

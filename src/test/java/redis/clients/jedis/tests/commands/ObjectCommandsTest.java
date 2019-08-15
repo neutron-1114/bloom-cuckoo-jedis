@@ -6,43 +6,43 @@ import org.junit.Test;
 
 import redis.clients.jedis.util.SafeEncoder;
 
-public class ObjectCommandsTest extends JedisCommandTestBase {
+public class ObjectCommandsTest extends CuckooJedisCommandTestBase {
 
   private String key = "mylist";
   private byte[] binaryKey = SafeEncoder.encode(key);
 
   @Test
   public void objectRefcount() {
-    jedis.lpush(key, "hello world");
-    Long refcount = jedis.objectRefcount(key);
+    cuckooJedis.lpush(key, "hello world");
+    Long refcount = cuckooJedis.objectRefcount(key);
     assertEquals(new Long(1), refcount);
 
     // Binary
-    refcount = jedis.objectRefcount(binaryKey);
+    refcount = cuckooJedis.objectRefcount(binaryKey);
     assertEquals(new Long(1), refcount);
 
   }
 
   @Test
   public void objectEncoding() {
-    jedis.lpush(key, "hello world");
-    String encoding = jedis.objectEncoding(key);
+    cuckooJedis.lpush(key, "hello world");
+    String encoding = cuckooJedis.objectEncoding(key);
     assertEquals("quicklist", encoding);
 
     // Binary
-    encoding = SafeEncoder.encode(jedis.objectEncoding(binaryKey));
+    encoding = SafeEncoder.encode(cuckooJedis.objectEncoding(binaryKey));
     assertEquals("quicklist", encoding);
   }
 
   @Test
   public void objectIdletime() throws InterruptedException {
-    jedis.lpush(key, "hello world");
+    cuckooJedis.lpush(key, "hello world");
 
-    Long time = jedis.objectIdletime(key);
+    Long time = cuckooJedis.objectIdletime(key);
     assertEquals(new Long(0), time);
 
     // Binary
-    time = jedis.objectIdletime(binaryKey);
+    time = cuckooJedis.objectIdletime(binaryKey);
     assertEquals(new Long(0), time);
   }
 }

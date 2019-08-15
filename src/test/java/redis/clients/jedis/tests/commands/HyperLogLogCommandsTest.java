@@ -6,14 +6,14 @@ import org.junit.Test;
 
 import redis.clients.jedis.util.SafeEncoder;
 
-public class HyperLogLogCommandsTest extends JedisCommandTestBase {
+public class HyperLogLogCommandsTest extends CuckooJedisCommandTestBase {
 
   @Test
   public void pfadd() {
-    long status = jedis.pfadd("foo", "a");
+    long status = cuckooJedis.pfadd("foo", "a");
     assertEquals(1, status);
 
-    status = jedis.pfadd("foo", "a");
+    status = cuckooJedis.pfadd("foo", "a");
     assertEquals(0, status);
   }
 
@@ -23,48 +23,48 @@ public class HyperLogLogCommandsTest extends JedisCommandTestBase {
     byte[] bBar = SafeEncoder.encode("bar");
     byte[] bBar2 = SafeEncoder.encode("bar2");
 
-    long status = jedis.pfadd(bFoo, bBar, bBar2);
+    long status = cuckooJedis.pfadd(bFoo, bBar, bBar2);
     assertEquals(1, status);
 
-    status = jedis.pfadd(bFoo, bBar, bBar2);
+    status = cuckooJedis.pfadd(bFoo, bBar, bBar2);
     assertEquals(0, status);
   }
 
   @Test
   public void pfcount() {
-    long status = jedis.pfadd("hll", "foo", "bar", "zap");
+    long status = cuckooJedis.pfadd("hll", "foo", "bar", "zap");
     assertEquals(1, status);
 
-    status = jedis.pfadd("hll", "zap", "zap", "zap");
+    status = cuckooJedis.pfadd("hll", "zap", "zap", "zap");
     assertEquals(0, status);
 
-    status = jedis.pfadd("hll", "foo", "bar");
+    status = cuckooJedis.pfadd("hll", "foo", "bar");
     assertEquals(0, status);
 
-    status = jedis.pfcount("hll");
+    status = cuckooJedis.pfcount("hll");
     assertEquals(3, status);
   }
 
   @Test
   public void pfcounts() {
-    long status = jedis.pfadd("hll_1", "foo", "bar", "zap");
+    long status = cuckooJedis.pfadd("hll_1", "foo", "bar", "zap");
     assertEquals(1, status);
-    status = jedis.pfadd("hll_2", "foo", "bar", "zap");
+    status = cuckooJedis.pfadd("hll_2", "foo", "bar", "zap");
     assertEquals(1, status);
 
-    status = jedis.pfadd("hll_3", "foo", "bar", "baz");
+    status = cuckooJedis.pfadd("hll_3", "foo", "bar", "baz");
     assertEquals(1, status);
-    status = jedis.pfcount("hll_1");
+    status = cuckooJedis.pfcount("hll_1");
     assertEquals(3, status);
-    status = jedis.pfcount("hll_2");
+    status = cuckooJedis.pfcount("hll_2");
     assertEquals(3, status);
-    status = jedis.pfcount("hll_3");
-    assertEquals(3, status);
-
-    status = jedis.pfcount("hll_1", "hll_2");
+    status = cuckooJedis.pfcount("hll_3");
     assertEquals(3, status);
 
-    status = jedis.pfcount("hll_1", "hll_2", "hll_3");
+    status = cuckooJedis.pfcount("hll_1", "hll_2");
+    assertEquals(3, status);
+
+    status = cuckooJedis.pfcount("hll_1", "hll_2", "hll_3");
     assertEquals(4, status);
 
   }
@@ -76,31 +76,31 @@ public class HyperLogLogCommandsTest extends JedisCommandTestBase {
     byte[] bBar = SafeEncoder.encode("bar");
     byte[] bZap = SafeEncoder.encode("zap");
 
-    long status = jedis.pfadd(bHll, bFoo, bBar, bZap);
+    long status = cuckooJedis.pfadd(bHll, bFoo, bBar, bZap);
     assertEquals(1, status);
 
-    status = jedis.pfadd(bHll, bZap, bZap, bZap);
+    status = cuckooJedis.pfadd(bHll, bZap, bZap, bZap);
     assertEquals(0, status);
 
-    status = jedis.pfadd(bHll, bFoo, bBar);
+    status = cuckooJedis.pfadd(bHll, bFoo, bBar);
     assertEquals(0, status);
 
-    status = jedis.pfcount(bHll);
+    status = cuckooJedis.pfcount(bHll);
     assertEquals(3, status);
   }
 
   @Test
   public void pfmerge() {
-    long status = jedis.pfadd("hll1", "foo", "bar", "zap", "a");
+    long status = cuckooJedis.pfadd("hll1", "foo", "bar", "zap", "a");
     assertEquals(1, status);
 
-    status = jedis.pfadd("hll2", "a", "b", "c", "foo");
+    status = cuckooJedis.pfadd("hll2", "a", "b", "c", "foo");
     assertEquals(1, status);
 
-    String mergeStatus = jedis.pfmerge("hll3", "hll1", "hll2");
+    String mergeStatus = cuckooJedis.pfmerge("hll3", "hll1", "hll2");
     assertEquals("OK", mergeStatus);
 
-    status = jedis.pfcount("hll3");
+    status = cuckooJedis.pfcount("hll3");
     assertEquals(6, status);
   }
 
@@ -116,16 +116,16 @@ public class HyperLogLogCommandsTest extends JedisCommandTestBase {
     byte[] bB = SafeEncoder.encode("b");
     byte[] bC = SafeEncoder.encode("c");
 
-    long status = jedis.pfadd(bHll1, bFoo, bBar, bZap, bA);
+    long status = cuckooJedis.pfadd(bHll1, bFoo, bBar, bZap, bA);
     assertEquals(1, status);
 
-    status = jedis.pfadd(bHll2, bA, bB, bC, bFoo);
+    status = cuckooJedis.pfadd(bHll2, bA, bB, bC, bFoo);
     assertEquals(1, status);
 
-    String mergeStatus = jedis.pfmerge(bHll3, bHll1, bHll2);
+    String mergeStatus = cuckooJedis.pfmerge(bHll3, bHll1, bHll2);
     assertEquals("OK", mergeStatus);
 
-    status = jedis.pfcount("hll3");
+    status = cuckooJedis.pfcount("hll3");
     assertEquals(6, status);
   }
 }

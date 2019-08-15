@@ -22,17 +22,17 @@ public interface Commands {
   void set(String key, String value);
 
   //tongzi modifiy
-  void cf_reserve(String key, String value);
-  void cf_add(String key, String value);
-  void cf_addnx(String key, String value);
-  void cf_insert(String key, String... value);
-  void cf_insertnx(String key, String... value);
-  void cf_exists(String key, String value);
-  void cf_mexists(String key, String... value);
-  void cf_del(String key, String value);
-  void cf_count(String key, String value);
-  void cf_scandump(String key, String value);
-  void cf_loadchunk(String key, String... value);
+  void cfreserve(String key, String value);
+  void cfadd(String key, String value);
+  void cfaddnx(String key, String value);
+  void cfinsert(String key, String... value);
+  void cfinsertnx(String key, String... value);
+  void cfexists(String key, String value);
+  void cfmexists(String key, String... value);
+  void cfdel(String key, String value);
+  void cfcount(String key, String value);
+  void cfscandump(String key, String value);
+  void cfloadchunk(String key, byte[][] value);
 
 
   void set(String key, String value, SetParams params);

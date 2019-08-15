@@ -13,16 +13,11 @@ import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.junit.Before;
 import org.junit.Test;
 
-import redis.clients.jedis.HostAndPort;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisShardInfo;
-import redis.clients.jedis.ShardedJedis;
-import redis.clients.jedis.ShardedJedisPipeline;
-import redis.clients.jedis.ShardedJedisPool;
-import redis.clients.jedis.exceptions.JedisException;
+import redis.clients.jedis.*;
+import redis.clients.jedis.CuckooJedis;
 import redis.clients.jedis.exceptions.JedisExhaustedPoolException;
 
-public class ShardedJedisPoolTest {
+public class ShardedCuckooCuckooJedisPoolTest {
   private static HostAndPort redis1 = HostAndPortUtil.getRedisServers().get(0);
   private static HostAndPort redis2 = HostAndPortUtil.getRedisServers().get(1);
 
@@ -35,11 +30,11 @@ public class ShardedJedisPoolTest {
     shards.add(new JedisShardInfo(redis2));
     shards.get(0).setPassword("foobared");
     shards.get(1).setPassword("foobared");
-    Jedis j = new Jedis(shards.get(0));
+    CuckooJedis j = new CuckooJedis(shards.get(0));
     j.connect();
     j.flushAll();
     j.disconnect();
-    j = new Jedis(shards.get(1));
+    j = new CuckooJedis(shards.get(1));
     j.connect();
     j.flushAll();
     j.disconnect();
@@ -152,11 +147,11 @@ public class ShardedJedisPoolTest {
     }
     jedis.close();
     // check quantity for each shard
-    Jedis j = new Jedis(shards.get(0));
+    CuckooJedis j = new CuckooJedis(shards.get(0));
     j.connect();
     Long c1 = j.dbSize();
     j.disconnect();
-    j = new Jedis(shards.get(1));
+    j = new CuckooJedis(shards.get(1));
     j.connect();
     Long c2 = j.dbSize();
     j.disconnect();
@@ -185,11 +180,11 @@ public class ShardedJedisPoolTest {
 
   @Test
   public void startWithUrlString() {
-    Jedis j = new Jedis("localhost", 6380);
+    CuckooJedis j = new CuckooJedis("localhost", 6380);
     j.auth("foobared");
     j.set("foo", "bar");
 
-    j = new Jedis("localhost", 6379);
+    j = new CuckooJedis("localhost", 6379);
     j.auth("foobared");
     j.set("foo", "bar");
 
@@ -200,24 +195,24 @@ public class ShardedJedisPoolTest {
     GenericObjectPoolConfig redisConfig = new GenericObjectPoolConfig();
     ShardedJedisPool pool = new ShardedJedisPool(redisConfig, shards);
 
-    Jedis[] jedises = pool.getResource().getAllShards().toArray(new Jedis[2]);
+    CuckooJedis[] jedises = pool.getResource().getAllShards().toArray(new CuckooJedis[2]);
 
-    Jedis jedis = jedises[0];
-    assertEquals("PONG", jedis.ping());
-    assertEquals("bar", jedis.get("foo"));
+    CuckooJedis cuckooJedis = jedises[0];
+    assertEquals("PONG", cuckooJedis.ping());
+    assertEquals("bar", cuckooJedis.get("foo"));
 
-    jedis = jedises[1];
-    assertEquals("PONG", jedis.ping());
-    assertEquals("bar", jedis.get("foo"));
+    cuckooJedis = jedises[1];
+    assertEquals("PONG", cuckooJedis.ping());
+    assertEquals("bar", cuckooJedis.get("foo"));
   }
 
   @Test
   public void startWithUrl() throws URISyntaxException {
-    Jedis j = new Jedis("localhost", 6380);
+    CuckooJedis j = new CuckooJedis("localhost", 6380);
     j.auth("foobared");
     j.set("foo", "bar");
 
-    j = new Jedis("localhost", 6379);
+    j = new CuckooJedis("localhost", 6379);
     j.auth("foobared");
     j.set("foo", "bar");
 
@@ -228,15 +223,15 @@ public class ShardedJedisPoolTest {
     GenericObjectPoolConfig redisConfig = new GenericObjectPoolConfig();
     ShardedJedisPool pool = new ShardedJedisPool(redisConfig, shards);
 
-    Jedis[] jedises = pool.getResource().getAllShards().toArray(new Jedis[2]);
+    CuckooJedis[] jedises = pool.getResource().getAllShards().toArray(new CuckooJedis[2]);
 
-    Jedis jedis = jedises[0];
-    assertEquals("PONG", jedis.ping());
-    assertEquals("bar", jedis.get("foo"));
+    CuckooJedis cuckooJedis = jedises[0];
+    assertEquals("PONG", cuckooJedis.ping());
+    assertEquals("bar", cuckooJedis.get("foo"));
 
-    jedis = jedises[1];
-    assertEquals("PONG", jedis.ping());
-    assertEquals("bar", jedis.get("foo"));
+    cuckooJedis = jedises[1];
+    assertEquals("PONG", cuckooJedis.ping());
+    assertEquals("bar", cuckooJedis.get("foo"));
   }
 
   @Test
@@ -286,7 +281,7 @@ public class ShardedJedisPoolTest {
 
     ShardedJedis jedis = pool.getResource();
     try {
-      jedis.set("hello", "jedis");
+      jedis.set("hello", "cuckooJedis");
     } finally {
       jedis.close();
     }

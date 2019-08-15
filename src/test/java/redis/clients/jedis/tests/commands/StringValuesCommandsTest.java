@@ -11,208 +11,208 @@ import org.junit.Test;
 
 import redis.clients.jedis.exceptions.JedisDataException;
 
-public class StringValuesCommandsTest extends JedisCommandTestBase {
+public class StringValuesCommandsTest extends CuckooJedisCommandTestBase {
   @Test
   public void setAndGet() {
-    String status = jedis.set("foo", "bar");
+    String status = cuckooJedis.set("foo", "bar");
     assertEquals("OK", status);
 
-    String value = jedis.get("foo");
+    String value = cuckooJedis.get("foo");
     assertEquals("bar", value);
 
-    assertNull(jedis.get("bar"));
+    assertNull(cuckooJedis.get("bar"));
   }
 
   @Test
   public void getSet() {
-    String value = jedis.getSet("foo", "bar");
+    String value = cuckooJedis.getSet("foo", "bar");
     assertNull(value);
-    value = jedis.get("foo");
+    value = cuckooJedis.get("foo");
     assertEquals("bar", value);
   }
 
   @Test
   public void mget() {
-    List<String> values = jedis.mget("foo", "bar");
+    List<String> values = cuckooJedis.mget("foo", "bar");
     List<String> expected = new ArrayList<String>();
     expected.add(null);
     expected.add(null);
 
     assertEquals(expected, values);
 
-    jedis.set("foo", "bar");
+    cuckooJedis.set("foo", "bar");
 
     expected = new ArrayList<String>();
     expected.add("bar");
     expected.add(null);
-    values = jedis.mget("foo", "bar");
+    values = cuckooJedis.mget("foo", "bar");
 
     assertEquals(expected, values);
 
-    jedis.set("bar", "foo");
+    cuckooJedis.set("bar", "foo");
 
     expected = new ArrayList<String>();
     expected.add("bar");
     expected.add("foo");
-    values = jedis.mget("foo", "bar");
+    values = cuckooJedis.mget("foo", "bar");
 
     assertEquals(expected, values);
   }
 
   @Test
   public void setnx() {
-    long status = jedis.setnx("foo", "bar");
+    long status = cuckooJedis.setnx("foo", "bar");
     assertEquals(1, status);
-    assertEquals("bar", jedis.get("foo"));
+    assertEquals("bar", cuckooJedis.get("foo"));
 
-    status = jedis.setnx("foo", "bar2");
+    status = cuckooJedis.setnx("foo", "bar2");
     assertEquals(0, status);
-    assertEquals("bar", jedis.get("foo"));
+    assertEquals("bar", cuckooJedis.get("foo"));
   }
 
   @Test
   public void setex() {
-    String status = jedis.setex("foo", 20, "bar");
+    String status = cuckooJedis.setex("foo", 20, "bar");
     assertEquals("OK", status);
-    long ttl = jedis.ttl("foo");
+    long ttl = cuckooJedis.ttl("foo");
     assertTrue(ttl > 0 && ttl <= 20);
   }
 
   @Test
   public void mset() {
-    String status = jedis.mset("foo", "bar", "bar", "foo");
+    String status = cuckooJedis.mset("foo", "bar", "bar", "foo");
     assertEquals("OK", status);
-    assertEquals("bar", jedis.get("foo"));
-    assertEquals("foo", jedis.get("bar"));
+    assertEquals("bar", cuckooJedis.get("foo"));
+    assertEquals("foo", cuckooJedis.get("bar"));
   }
 
   @Test
   public void msetnx() {
-    long status = jedis.msetnx("foo", "bar", "bar", "foo");
+    long status = cuckooJedis.msetnx("foo", "bar", "bar", "foo");
     assertEquals(1, status);
-    assertEquals("bar", jedis.get("foo"));
-    assertEquals("foo", jedis.get("bar"));
+    assertEquals("bar", cuckooJedis.get("foo"));
+    assertEquals("foo", cuckooJedis.get("bar"));
 
-    status = jedis.msetnx("foo", "bar1", "bar2", "foo2");
+    status = cuckooJedis.msetnx("foo", "bar1", "bar2", "foo2");
     assertEquals(0, status);
-    assertEquals("bar", jedis.get("foo"));
-    assertEquals("foo", jedis.get("bar"));
+    assertEquals("bar", cuckooJedis.get("foo"));
+    assertEquals("foo", cuckooJedis.get("bar"));
   }
 
   @Test(expected = JedisDataException.class)
   public void incrWrongValue() {
-    jedis.set("foo", "bar");
-    jedis.incr("foo");
+    cuckooJedis.set("foo", "bar");
+    cuckooJedis.incr("foo");
   }
 
   @Test
   public void incr() {
-    long value = jedis.incr("foo");
+    long value = cuckooJedis.incr("foo");
     assertEquals(1, value);
-    value = jedis.incr("foo");
+    value = cuckooJedis.incr("foo");
     assertEquals(2, value);
   }
 
   @Test(expected = JedisDataException.class)
   public void incrByWrongValue() {
-    jedis.set("foo", "bar");
-    jedis.incrBy("foo", 2);
+    cuckooJedis.set("foo", "bar");
+    cuckooJedis.incrBy("foo", 2);
   }
 
   @Test
   public void incrBy() {
-    long value = jedis.incrBy("foo", 2);
+    long value = cuckooJedis.incrBy("foo", 2);
     assertEquals(2, value);
-    value = jedis.incrBy("foo", 2);
+    value = cuckooJedis.incrBy("foo", 2);
     assertEquals(4, value);
   }
 
   @Test(expected = JedisDataException.class)
   public void incrByFloatWrongValue() {
-    jedis.set("foo", "bar");
-    jedis.incrByFloat("foo", 2d);
+    cuckooJedis.set("foo", "bar");
+    cuckooJedis.incrByFloat("foo", 2d);
   }
 
   @Test(expected = JedisDataException.class)
   public void decrWrongValue() {
-    jedis.set("foo", "bar");
-    jedis.decr("foo");
+    cuckooJedis.set("foo", "bar");
+    cuckooJedis.decr("foo");
   }
 
   @Test
   public void decr() {
-    long value = jedis.decr("foo");
+    long value = cuckooJedis.decr("foo");
     assertEquals(-1, value);
-    value = jedis.decr("foo");
+    value = cuckooJedis.decr("foo");
     assertEquals(-2, value);
   }
 
   @Test(expected = JedisDataException.class)
   public void decrByWrongValue() {
-    jedis.set("foo", "bar");
-    jedis.decrBy("foo", 2);
+    cuckooJedis.set("foo", "bar");
+    cuckooJedis.decrBy("foo", 2);
   }
 
   @Test
   public void decrBy() {
-    long value = jedis.decrBy("foo", 2);
+    long value = cuckooJedis.decrBy("foo", 2);
     assertEquals(-2, value);
-    value = jedis.decrBy("foo", 2);
+    value = cuckooJedis.decrBy("foo", 2);
     assertEquals(-4, value);
   }
 
   @Test
   public void append() {
-    long value = jedis.append("foo", "bar");
+    long value = cuckooJedis.append("foo", "bar");
     assertEquals(3, value);
-    assertEquals("bar", jedis.get("foo"));
-    value = jedis.append("foo", "bar");
+    assertEquals("bar", cuckooJedis.get("foo"));
+    value = cuckooJedis.append("foo", "bar");
     assertEquals(6, value);
-    assertEquals("barbar", jedis.get("foo"));
+    assertEquals("barbar", cuckooJedis.get("foo"));
   }
 
   @Test
   public void substr() {
-    jedis.set("s", "This is a string");
-    assertEquals("This", jedis.substr("s", 0, 3));
-    assertEquals("ing", jedis.substr("s", -3, -1));
-    assertEquals("This is a string", jedis.substr("s", 0, -1));
-    assertEquals(" string", jedis.substr("s", 9, 100000));
+    cuckooJedis.set("s", "This is a string");
+    assertEquals("This", cuckooJedis.substr("s", 0, 3));
+    assertEquals("ing", cuckooJedis.substr("s", -3, -1));
+    assertEquals("This is a string", cuckooJedis.substr("s", 0, -1));
+    assertEquals(" string", cuckooJedis.substr("s", 9, 100000));
   }
 
   @Test
   public void strlen() {
-    jedis.set("s", "This is a string");
-    assertEquals("This is a string".length(), jedis.strlen("s").intValue());
+    cuckooJedis.set("s", "This is a string");
+    assertEquals("This is a string".length(), cuckooJedis.strlen("s").intValue());
   }
 
   @Test
   public void incrLargeNumbers() {
-    long value = jedis.incr("foo");
+    long value = cuckooJedis.incr("foo");
     assertEquals(1, value);
-    assertEquals(1L + Integer.MAX_VALUE, (long) jedis.incrBy("foo", Integer.MAX_VALUE));
+    assertEquals(1L + Integer.MAX_VALUE, (long) cuckooJedis.incrBy("foo", Integer.MAX_VALUE));
   }
 
   @Test(expected = JedisDataException.class)
   public void incrReallyLargeNumbers() {
-    jedis.set("foo", Long.toString(Long.MAX_VALUE));
-    long value = jedis.incr("foo");
+    cuckooJedis.set("foo", Long.toString(Long.MAX_VALUE));
+    long value = cuckooJedis.incr("foo");
     assertEquals(Long.MIN_VALUE, value);
   }
 
   @Test
   public void incrByFloat() {
-    double value = jedis.incrByFloat("foo", 10.5);
+    double value = cuckooJedis.incrByFloat("foo", 10.5);
     assertEquals(10.5, value, 0.0);
-    value = jedis.incrByFloat("foo", 0.1);
+    value = cuckooJedis.incrByFloat("foo", 0.1);
     assertEquals(10.6, value, 0.0);
   }
 
   @Test
   public void psetex() {
-    String status = jedis.psetex("foo", 20000, "bar");
+    String status = cuckooJedis.psetex("foo", 20000, "bar");
     assertEquals("OK", status);
-    long ttl = jedis.ttl("foo");
+    long ttl = cuckooJedis.ttl("foo");
     assertTrue(ttl > 0 && ttl <= 20000);
   }
 }

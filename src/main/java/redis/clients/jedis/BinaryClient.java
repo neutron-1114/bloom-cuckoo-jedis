@@ -1456,47 +1456,47 @@ public class BinaryClient extends Connection {
   }
 
   //tongzi modifiy start
-  public void cf_reserve(final byte[] key, final byte[] value) {
+  public void cfreserve(final byte[] key, final byte[] value) {
     sendCommand(CF_RESERVE, key, value);
   }
 
-  public void cf_add(final byte[] key, final byte[] value) {
+  public void cfadd(final byte[] key, final byte[] value) {
     sendCommand(CF_ADD, key, value);
   }
 
-  public void cf_addnx(final byte[] key, final byte[] value) {
+  public void cfaddnx(final byte[] key, final byte[] value) {
     sendCommand(CF_ADDNX, key, value);
   }
 
-  public void cf_insert(final byte[] key, final byte[]... value) {
+  public void cfinsert(final byte[] key, final byte[]... value) {
     sendCommand(CF_INSERT, joinParameters(key, value));
   }
 
-  public void cf_insertnx(final byte[] key, final byte[]... value) {
+  public void cfinsertnx(final byte[] key, final byte[]... value) {
     sendCommand(CF_INSERTNX, joinParameters(key, value));
   }
 
-  public void cf_exists(final byte[] key, final byte[] value) {
+  public void cfexists(final byte[] key, final byte[] value) {
     sendCommand(CF_EXISTS, key, value);
   }
 
-  public void cf_mexists(final byte[] key, final byte[]... value) {
+  public void cfmexists(final byte[] key, final byte[]... value) {
     sendCommand(CF_MEXIST, joinParameters(key, value));
   }
 
-  public void cf_del(final byte[] key, final byte[] value) {
+  public void cfdel(final byte[] key, final byte[] value) {
     sendCommand(CF_DEL, key, value);
   }
 
-  public void cf_count(final byte[] key, final byte[] value) {
+  public void cfcount(final byte[] key, final byte[] value) {
     sendCommand(CF_COUNT, key, value);
   }
 
-  public void cf_scandump(final byte[] key, final byte[] value) {
+  public void cfscandump(final byte[] key, final byte[] value) {
     sendCommand(CF_DUMP, key, value);
   }
 
-  public void cf_loadchunk(final byte[] key, final byte[]... value) {
+  public void cfloadchunk(final byte[] key, final byte[]... value) {
     sendCommand(CF_LOADCHUNK, joinParameters(key, value));
   }
 

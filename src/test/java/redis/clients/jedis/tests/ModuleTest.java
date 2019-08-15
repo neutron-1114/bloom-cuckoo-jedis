@@ -9,10 +9,10 @@ import org.junit.Test;
 
 import redis.clients.jedis.Module;
 import redis.clients.jedis.commands.ProtocolCommand;
-import redis.clients.jedis.tests.commands.JedisCommandTestBase;
+import redis.clients.jedis.tests.commands.CuckooJedisCommandTestBase;
 import redis.clients.jedis.util.SafeEncoder;
 
-public class ModuleTest extends JedisCommandTestBase {
+public class ModuleTest extends CuckooJedisCommandTestBase {
 
   static enum ModuleCommand implements ProtocolCommand {
     SIMPLE("testmodule.simple")  ;
@@ -31,18 +31,18 @@ public class ModuleTest extends JedisCommandTestBase {
 
   @Test
   public void testModules() {
-    String res = jedis.moduleLoad("/tmp/testmodule.so");
+    String res = cuckooJedis.moduleLoad("/tmp/testmodule.so");
     assertEquals("OK", res);
 
-    List<Module> modules = jedis.moduleList();
+    List<Module> modules = cuckooJedis.moduleList();
 
     assertEquals("testmodule", modules.get(0).getName());
 
-    jedis.getClient().sendCommand(ModuleCommand.SIMPLE);
-    Long out = jedis.getClient().getIntegerReply();
+    cuckooJedis.getClient().sendCommand(ModuleCommand.SIMPLE);
+    Long out = cuckooJedis.getClient().getIntegerReply();
     assertTrue(out > 0);
 
-    res = jedis.moduleUnload("testmodule");
+    res = cuckooJedis.moduleUnload("testmodule");
     assertEquals("OK", res);
   }
 

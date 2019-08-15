@@ -12,7 +12,7 @@ import org.junit.Test;
 import redis.clients.jedis.util.JedisClusterCRC16;
 import redis.clients.jedis.util.SafeEncoder;
 
-public class JedisClusterCRC16Test {
+public class CuckooJedisClusterCRC16Test {
 
   @Test
   public void testGetCRC16() throws Exception {

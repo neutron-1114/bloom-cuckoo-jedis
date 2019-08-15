@@ -14,23 +14,23 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import redis.clients.jedis.CuckooJedis;
 import redis.clients.jedis.HostAndPort;
-import redis.clients.jedis.Jedis;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 import redis.clients.jedis.params.ClientKillParams;
 
-public class ClientCommandsTest extends JedisCommandTestBase {
+public class ClientCommandsTest extends CuckooJedisCommandTestBase {
 
   private final String clientName = "fancy_jedis_name";
   private final Pattern pattern = Pattern.compile("\\bname=" + clientName + "\\b");
 
-  private Jedis client;
+  private CuckooJedis client;
 
   @Before
   @Override
   public void setUp() throws Exception {
     super.setUp();
-    client = new Jedis(hnp.getHost(), hnp.getPort(), 500);
+    client = new CuckooJedis(hnp.getHost(), hnp.getPort(), 500);
     client.auth("foobared");
     client.clientSetname(clientName);
   }
@@ -63,7 +63,7 @@ public class ClientCommandsTest extends JedisCommandTestBase {
     matcher.find();
     String id = matcher.group(1);
 
-    long clients = jedis.clientKill(new ClientKillParams().id(id));
+    long clients = cuckooJedis.clientKill(new ClientKillParams().id(id));
     assertEquals(1, clients);
 
     assertDisconnected(client);
@@ -76,7 +76,7 @@ public class ClientCommandsTest extends JedisCommandTestBase {
     matcher.find();
     byte[] id = matcher.group(1).getBytes();
 
-    long clients = jedis.clientKill(new ClientKillParams().id(id));
+    long clients = cuckooJedis.clientKill(new ClientKillParams().id(id));
     assertEquals(1, clients);
 
     assertDisconnected(client);
@@ -84,25 +84,25 @@ public class ClientCommandsTest extends JedisCommandTestBase {
 
   @Test
   public void killTypeNormal() {
-    long clients = jedis.clientKill(new ClientKillParams().type(Type.NORMAL));
+    long clients = cuckooJedis.clientKill(new ClientKillParams().type(Type.NORMAL));
     assertTrue(clients > 0);
     assertDisconnected(client);
   }
 
   @Test
   public void killSkipmeNo() {
-    jedis.clientKill(new ClientKillParams().type(Type.NORMAL).skipMe(SkipMe.NO));
+    cuckooJedis.clientKill(new ClientKillParams().type(Type.NORMAL).skipMe(SkipMe.NO));
     assertDisconnected(client);
-    assertDisconnected(jedis);
+    assertDisconnected(cuckooJedis);
   }
 
   @Test
   public void killSkipmeYesNo() {
-    jedis.clientKill(new ClientKillParams().type(Type.NORMAL).skipMe(SkipMe.YES));
+    cuckooJedis.clientKill(new ClientKillParams().type(Type.NORMAL).skipMe(SkipMe.YES));
     assertDisconnected(client);
-    long clients = jedis.clientKill(new ClientKillParams().type(Type.NORMAL).skipMe(SkipMe.NO));
+    long clients = cuckooJedis.clientKill(new ClientKillParams().type(Type.NORMAL).skipMe(SkipMe.NO));
     assertEquals(1, clients);
-    assertDisconnected(jedis);
+    assertDisconnected(cuckooJedis);
   }
 
   @Test
@@ -112,7 +112,7 @@ public class ClientCommandsTest extends JedisCommandTestBase {
     matcher.find();
     String addr = matcher.group(1);
 
-    long clients = jedis.clientKill(new ClientKillParams().addr(addr));
+    long clients = cuckooJedis.clientKill(new ClientKillParams().addr(addr));
     assertEquals(1, clients);
 
     assertDisconnected(client);
@@ -125,7 +125,7 @@ public class ClientCommandsTest extends JedisCommandTestBase {
     matcher.find();
     String addr = matcher.group(1);
 
-    long clients = jedis.clientKill(new ClientKillParams().addr(addr));
+    long clients = cuckooJedis.clientKill(new ClientKillParams().addr(addr));
     assertEquals(1, clients);
 
     assertDisconnected(client);
@@ -139,23 +139,23 @@ public class ClientCommandsTest extends JedisCommandTestBase {
     String addr = matcher.group(1);
     String[] hp = HostAndPort.extractParts(addr);
 
-    long clients = jedis.clientKill(new ClientKillParams().addr(hp[0], Integer.parseInt(hp[1])));
+    long clients = cuckooJedis.clientKill(new ClientKillParams().addr(hp[0], Integer.parseInt(hp[1])));
     assertEquals(1, clients);
 
     assertDisconnected(client);
   }
 
-  private void assertDisconnected(Jedis j) {    
+  private void assertDisconnected(CuckooJedis j) {
     try {
       j.ping();
-      fail("Jedis connection should be disconnected");
+      fail("CuckooJedis connection should be disconnected");
     } catch(JedisConnectionException jce) {
       // should be here
     } 
   }
 
   private String findInClientList() {
-    for (String clientInfo : jedis.clientList().split("\n")) {
+    for (String clientInfo : cuckooJedis.clientList().split("\n")) {
       if (pattern.matcher(clientInfo).find()) {
         return clientInfo;
       }

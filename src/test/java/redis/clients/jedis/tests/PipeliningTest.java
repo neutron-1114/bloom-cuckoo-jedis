@@ -26,30 +26,27 @@ import org.hamcrest.Matcher;
 import org.junit.Before;
 import org.junit.Test;
 
-import redis.clients.jedis.HostAndPort;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.Pipeline;
-import redis.clients.jedis.Response;
-import redis.clients.jedis.Tuple;
+import redis.clients.jedis.*;
+import redis.clients.jedis.CuckooJedis;
 import redis.clients.jedis.exceptions.JedisDataException;
 import redis.clients.jedis.util.SafeEncoder;
 
 public class PipeliningTest {
   private static HostAndPort hnp = HostAndPortUtil.getRedisServers().get(0);
 
-  private Jedis jedis;
+  private CuckooJedis cuckooJedis;
 
   @Before
   public void setUp() throws Exception {
-    jedis = new Jedis(hnp.getHost(), hnp.getPort(), 2000);
-    jedis.connect();
-    jedis.auth("foobared");
-    jedis.flushAll();
+    cuckooJedis = new CuckooJedis(hnp.getHost(), hnp.getPort(), 2000);
+    cuckooJedis.connect();
+    cuckooJedis.auth("foobared");
+    cuckooJedis.flushAll();
   }
 
   @Test
   public void pipeline() throws UnsupportedEncodingException {
-    Pipeline p = jedis.pipelined();
+    Pipeline p = cuckooJedis.pipelined();
     p.set("foo", "bar");
     p.get("foo");
     List<Object> results = p.syncAndReturnAll();
@@ -62,16 +59,16 @@ public class PipeliningTest {
 
   @Test
   public void pipelineResponse() {
-    jedis.set("string", "foo");
-    jedis.lpush("list", "foo");
-    jedis.hset("hash", "foo", "bar");
-    jedis.zadd("zset", 1, "foo");
-    jedis.sadd("set", "foo");
-    jedis.setrange("setrange", 0, "0123456789");
+    cuckooJedis.set("string", "foo");
+    cuckooJedis.lpush("list", "foo");
+    cuckooJedis.hset("hash", "foo", "bar");
+    cuckooJedis.zadd("zset", 1, "foo");
+    cuckooJedis.sadd("set", "foo");
+    cuckooJedis.setrange("setrange", 0, "0123456789");
     byte[] bytesForSetRange = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-    jedis.setrange("setrangebytes".getBytes(), 0, bytesForSetRange);
+    cuckooJedis.setrange("setrangebytes".getBytes(), 0, bytesForSetRange);
 
-    Pipeline p = jedis.pipelined();
+    Pipeline p = cuckooJedis.pipelined();
     Response<String> string = p.get("string");
     Response<String> list = p.lpop("list");
     Response<String> hash = p.hget("hash", "foo");
@@ -109,9 +106,9 @@ public class PipeliningTest {
 
   @Test
   public void pipelineResponseWithData() {
-    jedis.zadd("zset", 1, "foo");
+    cuckooJedis.zadd("zset", 1, "foo");
 
-    Pipeline p = jedis.pipelined();
+    Pipeline p = cuckooJedis.pipelined();
     Response<Double> score = p.zscore("zset", "foo");
     p.sync();
 
@@ -120,10 +117,10 @@ public class PipeliningTest {
 
   @Test
   public void pipelineBinarySafeHashCommands() {
-    jedis.hset("key".getBytes(), "f1".getBytes(), "v111".getBytes());
-    jedis.hset("key".getBytes(), "f22".getBytes(), "v2222".getBytes());
+    cuckooJedis.hset("key".getBytes(), "f1".getBytes(), "v111".getBytes());
+    cuckooJedis.hset("key".getBytes(), "f22".getBytes(), "v2222".getBytes());
 
-    Pipeline p = jedis.pipelined();
+    Pipeline p = cuckooJedis.pipelined();
     Response<Map<byte[], byte[]>> fmap = p.hgetAll("key".getBytes());
     Response<Set<byte[]>> fkeys = p.hkeys("key".getBytes());
     Response<List<byte[]>> fordered = p.hmget("key".getBytes(), "f22".getBytes(), "f1".getBytes());
@@ -175,16 +172,16 @@ public class PipeliningTest {
 
   @Test
   public void pipelineSelect() {
-    Pipeline p = jedis.pipelined();
+    Pipeline p = cuckooJedis.pipelined();
     p.select(1);
     p.sync();
   }
 
   @Test
   public void pipelineResponseWithoutData() {
-    jedis.zadd("zset", 1, "foo");
+    cuckooJedis.zadd("zset", 1, "foo");
 
-    Pipeline p = jedis.pipelined();
+    Pipeline p = cuckooJedis.pipelined();
     Response<Double> score = p.zscore("zset", "bar");
     p.sync();
 
@@ -193,9 +190,9 @@ public class PipeliningTest {
 
   @Test(expected = JedisDataException.class)
   public void pipelineResponseWithinPipeline() {
-    jedis.set("string", "foo");
+    cuckooJedis.set("string", "foo");
 
-    Pipeline p = jedis.pipelined();
+    Pipeline p = cuckooJedis.pipelined();
     Response<String> string = p.get("string");
     string.get();
     p.sync();
@@ -203,7 +200,7 @@ public class PipeliningTest {
 
   @Test
   public void pipelineWithPubSub() {
-    Pipeline pipelined = jedis.pipelined();
+    Pipeline pipelined = cuckooJedis.pipelined();
     Response<Long> p1 = pipelined.publish("foo", "bar");
     Response<Long> p2 = pipelined.publish("foo".getBytes(), "bar".getBytes());
     pipelined.sync();
@@ -213,7 +210,7 @@ public class PipeliningTest {
 
   @Test
   public void canRetrieveUnsetKey() {
-    Pipeline p = jedis.pipelined();
+    Pipeline p = cuckooJedis.pipelined();
     Response<String> shouldNotExist = p.get(UUID.randomUUID().toString());
     p.sync();
     assertNull(shouldNotExist.get());
@@ -221,7 +218,7 @@ public class PipeliningTest {
 
   @Test
   public void piplineWithError() {
-    Pipeline p = jedis.pipelined();
+    Pipeline p = cuckooJedis.pipelined();
     p.set("foo", "bar");
     Response<Set<String>> error = p.smembers("foo");
     Response<String> r = p.get("foo");
@@ -237,7 +234,7 @@ public class PipeliningTest {
 
   @Test
   public void multi() {
-    Pipeline p = jedis.pipelined();
+    Pipeline p = cuckooJedis.pipelined();
     p.multi();
     Response<Long> r1 = p.hincrBy("a", "f1", -1);
     Response<Long> r2 = p.hincrBy("a", "f1", -2);
@@ -266,7 +263,7 @@ public class PipeliningTest {
 
   @Test
   public void multiWithMassiveRequests() {
-    Pipeline p = jedis.pipelined();
+    Pipeline p = cuckooJedis.pipelined();
     p.multi();
 
     List<Response<?>> responseList = new ArrayList<Response<?>>();
@@ -289,10 +286,10 @@ public class PipeliningTest {
 
   @Test
   public void multiWithSync() {
-    jedis.set("foo", "314");
-    jedis.set("bar", "foo");
-    jedis.set("hello", "world");
-    Pipeline p = jedis.pipelined();
+    cuckooJedis.set("foo", "314");
+    cuckooJedis.set("bar", "foo");
+    cuckooJedis.set("hello", "world");
+    Pipeline p = cuckooJedis.pipelined();
     Response<String> r1 = p.get("bar");
     p.multi();
     Response<String> r2 = p.get("foo");
@@ -310,19 +307,19 @@ public class PipeliningTest {
 
   @Test(expected = JedisDataException.class)
   public void pipelineExecShoudThrowJedisDataExceptionWhenNotInMulti() {
-    Pipeline pipeline = jedis.pipelined();
+    Pipeline pipeline = cuckooJedis.pipelined();
     pipeline.exec();
   }
 
   @Test(expected = JedisDataException.class)
   public void pipelineDiscardShoudThrowJedisDataExceptionWhenNotInMulti() {
-    Pipeline pipeline = jedis.pipelined();
+    Pipeline pipeline = cuckooJedis.pipelined();
     pipeline.discard();
   }
 
   @Test(expected = JedisDataException.class)
   public void pipelineMultiShoudThrowJedisDataExceptionWhenAlreadyInMulti() {
-    Pipeline pipeline = jedis.pipelined();
+    Pipeline pipeline = cuckooJedis.pipelined();
     pipeline.multi();
     pipeline.set("foo", "3");
     pipeline.multi();
@@ -330,33 +327,33 @@ public class PipeliningTest {
 
   @Test(expected = JedisDataException.class)
   public void testJedisThowExceptionWhenInPipeline() {
-    Pipeline pipeline = jedis.pipelined();
+    Pipeline pipeline = cuckooJedis.pipelined();
     pipeline.set("foo", "3");
-    jedis.get("somekey");
-    fail("Can't use jedis instance when in Pipeline");
+    cuckooJedis.get("somekey");
+    fail("Can't use cuckooJedis instance when in Pipeline");
   }
 
   @Test
   public void testReuseJedisWhenPipelineIsEmpty() {
-    Pipeline pipeline = jedis.pipelined();
+    Pipeline pipeline = cuckooJedis.pipelined();
     pipeline.set("foo", "3");
     pipeline.sync();
-    String result = jedis.get("foo");
+    String result = cuckooJedis.get("foo");
     assertEquals(result, "3");
   }
 
   @Test
   public void testResetStateWhenInPipeline() {
-    Pipeline pipeline = jedis.pipelined();
+    Pipeline pipeline = cuckooJedis.pipelined();
     pipeline.set("foo", "3");
-    jedis.resetState();
-    String result = jedis.get("foo");
+    cuckooJedis.resetState();
+    String result = cuckooJedis.get("foo");
     assertEquals(result, "3");
   }
 
   @Test
   public void testDiscardInPipeline() {
-    Pipeline pipeline = jedis.pipelined();
+    Pipeline pipeline = cuckooJedis.pipelined();
     pipeline.multi();
     pipeline.set("foo", "bar");
     Response<String> discard = pipeline.discard();
@@ -370,7 +367,7 @@ public class PipeliningTest {
   public void testEval() {
     String script = "return 'success!'";
 
-    Pipeline p = jedis.pipelined();
+    Pipeline p = cuckooJedis.pipelined();
     Response<Object> result = p.eval(script);
     p.sync();
 
@@ -381,7 +378,7 @@ public class PipeliningTest {
   public void testEvalWithBinary() {
     String script = "return 'success!'";
 
-    Pipeline p = jedis.pipelined();
+    Pipeline p = cuckooJedis.pipelined();
     Response<Object> result = p.eval(SafeEncoder.encode(script));
     p.sync();
 
@@ -394,7 +391,7 @@ public class PipeliningTest {
     String arg = "3";
     String script = "redis.call('INCRBY', KEYS[1], ARGV[1]) redis.call('INCRBY', KEYS[1], ARGV[1])";
 
-    Pipeline p = jedis.pipelined();
+    Pipeline p = cuckooJedis.pipelined();
     p.set(key, "0");
     Response<Object> result0 = p.eval(script, Arrays.asList(key), Arrays.asList(arg));
     p.incr(key);
@@ -415,7 +412,7 @@ public class PipeliningTest {
     byte[] bScript = SafeEncoder
         .encode("redis.call('INCRBY', KEYS[1], ARGV[1]) redis.call('INCRBY', KEYS[1], ARGV[1])");
 
-    Pipeline bP = jedis.pipelined();
+    Pipeline bP = cuckooJedis.pipelined();
     bP.set(bKey, SafeEncoder.encode("0"));
     Response<Object> bResult0 = bP.eval(bScript, Arrays.asList(bKey), Arrays.asList(bArg));
     bP.incr(bKey);
@@ -432,7 +429,7 @@ public class PipeliningTest {
   public void testEvalNestedLists() {
     String script = "return { {KEYS[1]} , {2} }";
 
-    Pipeline p = jedis.pipelined();
+    Pipeline p = cuckooJedis.pipelined();
     Response<Object> result = p.eval(script, 1, "key1");
     p.sync();
 
@@ -446,7 +443,7 @@ public class PipeliningTest {
     byte[] bScript = SafeEncoder.encode("return { {KEYS[1]} , {2} }");
     byte[] bKey = SafeEncoder.encode("key1");
 
-    Pipeline p = jedis.pipelined();
+    Pipeline p = cuckooJedis.pipelined();
     Response<Object> result = p.eval(bScript, 1, bKey);
     p.sync();
 
@@ -458,11 +455,11 @@ public class PipeliningTest {
   @Test
   public void testEvalsha() {
     String script = "return 'success!'";
-    String sha1 = jedis.scriptLoad(script);
+    String sha1 = cuckooJedis.scriptLoad(script);
 
-    assertTrue(jedis.scriptExists(sha1));
+    assertTrue(cuckooJedis.scriptExists(sha1));
 
-    Pipeline p = jedis.pipelined();
+    Pipeline p = cuckooJedis.pipelined();
     Response<Object> result = p.evalsha(sha1);
     p.sync();
 
@@ -474,11 +471,11 @@ public class PipeliningTest {
     String key = "test";
     String arg = "3";
     String script = "redis.call('INCRBY', KEYS[1], ARGV[1]) redis.call('INCRBY', KEYS[1], ARGV[1])";
-    String sha1 = jedis.scriptLoad(script);
+    String sha1 = cuckooJedis.scriptLoad(script);
 
-    assertTrue(jedis.scriptExists(sha1));
+    assertTrue(cuckooJedis.scriptExists(sha1));
 
-    Pipeline p = jedis.pipelined();
+    Pipeline p = cuckooJedis.pipelined();
     p.set(key, "0");
     Response<Object> result0 = p.evalsha(sha1, Arrays.asList(key), Arrays.asList(arg));
     p.incr(key);
@@ -497,11 +494,11 @@ public class PipeliningTest {
     byte[] bArg = SafeEncoder.encode("3");
     String script = "redis.call('INCRBY', KEYS[1], ARGV[1]) redis.call('INCRBY', KEYS[1], ARGV[1])";
     byte[] bScript = SafeEncoder.encode(script);
-    byte[] bSha1 = jedis.scriptLoad(bScript);
+    byte[] bSha1 = cuckooJedis.scriptLoad(bScript);
 
-    assertTrue(jedis.scriptExists(bSha1) == 1);
+    assertTrue(cuckooJedis.scriptExists(bSha1) == 1);
 
-    Pipeline p = jedis.pipelined();
+    Pipeline p = cuckooJedis.pipelined();
     p.set(bKey, SafeEncoder.encode("0"));
     Response<Object> result0 = p.evalsha(bSha1, Arrays.asList(bKey), Arrays.asList(bArg));
     p.incr(bKey);
@@ -543,12 +540,12 @@ public class PipeliningTest {
     hashMap1.put(field3, value3);
     hashMap1.put(field4, value4);
 
-    jedis.set(key1, val1);
-    jedis.set(key2, val2);
-    jedis.hmset(key3, hashMap);
-    jedis.hmset(key4, hashMap1);
+    cuckooJedis.set(key1, val1);
+    cuckooJedis.set(key2, val2);
+    cuckooJedis.hmset(key3, hashMap);
+    cuckooJedis.hmset(key4, hashMap1);
 
-    Pipeline pipeline = jedis.pipelined();
+    Pipeline pipeline = cuckooJedis.pipelined();
     pipeline.multi();
 
     pipeline.get(key1);
@@ -582,30 +579,30 @@ public class PipeliningTest {
 
   @Test
   public void testSyncWithNoCommandQueued() {
-    // we need to test with fresh instance of Jedis
-    Jedis jedis2 = new Jedis(hnp.getHost(), hnp.getPort(), 500);
+    // we need to test with fresh instance of CuckooJedis
+    CuckooJedis cuckooJedis2 = new CuckooJedis(hnp.getHost(), hnp.getPort(), 500);
 
-    Pipeline pipeline = jedis2.pipelined();
+    Pipeline pipeline = cuckooJedis2.pipelined();
     pipeline.sync();
 
-    jedis2.close();
+    cuckooJedis2.close();
 
-    jedis2 = new Jedis(hnp.getHost(), hnp.getPort(), 500);
+    cuckooJedis2 = new CuckooJedis(hnp.getHost(), hnp.getPort(), 500);
 
-    pipeline = jedis2.pipelined();
+    pipeline = cuckooJedis2.pipelined();
     List<Object> resp = pipeline.syncAndReturnAll();
     assertTrue(resp.isEmpty());
 
-    jedis2.close();
+    cuckooJedis2.close();
   }
 
   @Test
   public void testCloseable() throws IOException {
-    // we need to test with fresh instance of Jedis
-    Jedis jedis2 = new Jedis(hnp.getHost(), hnp.getPort(), 500);
-    jedis2.auth("foobared");
+    // we need to test with fresh instance of CuckooJedis
+    CuckooJedis cuckooJedis2 = new CuckooJedis(hnp.getHost(), hnp.getPort(), 500);
+    cuckooJedis2.auth("foobared");
 
-    Pipeline pipeline = jedis2.pipelined();
+    Pipeline pipeline = cuckooJedis2.pipelined();
     Response<String> retFuture1 = pipeline.set("a", "1");
     Response<String> retFuture2 = pipeline.set("b", "2");
 
@@ -618,11 +615,11 @@ public class PipeliningTest {
 
   @Test
   public void testCloseableWithMulti() throws IOException {
-    // we need to test with fresh instance of Jedis
-    Jedis jedis2 = new Jedis(hnp.getHost(), hnp.getPort(), 500);
-    jedis2.auth("foobared");
+    // we need to test with fresh instance of CuckooJedis
+    CuckooJedis cuckooJedis2 = new CuckooJedis(hnp.getHost(), hnp.getPort(), 500);
+    cuckooJedis2.auth("foobared");
 
-    Pipeline pipeline = jedis2.pipelined();
+    Pipeline pipeline = cuckooJedis2.pipelined();
     Response<String> retFuture1 = pipeline.set("a", "1");
     Response<String> retFuture2 = pipeline.set("b", "2");
 

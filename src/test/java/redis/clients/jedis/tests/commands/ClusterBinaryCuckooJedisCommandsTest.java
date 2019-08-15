@@ -16,18 +16,18 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 
+import redis.clients.jedis.CuckooJedis;
 import redis.clients.jedis.HostAndPort;
-import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.tests.HostAndPortUtil;
 import redis.clients.jedis.util.JedisClusterCRC16;
 import redis.clients.jedis.util.SafeEncoder;
 
-public class ClusterBinaryJedisCommandsTest {
-  private Jedis node1;
-  private static Jedis node2;
-  private static Jedis node3;
+public class ClusterBinaryCuckooJedisCommandsTest {
+  private CuckooJedis node1;
+  private static CuckooJedis node2;
+  private static CuckooJedis node3;
 
   private HostAndPort nodeInfo1 = HostAndPortUtil.getClusterServers().get(0);
   private HostAndPort nodeInfo2 = HostAndPortUtil.getClusterServers().get(1);
@@ -37,15 +37,15 @@ public class ClusterBinaryJedisCommandsTest {
 
   @Before
   public void setUp() throws InterruptedException {
-    node1 = new Jedis(nodeInfo1);
+    node1 = new CuckooJedis(nodeInfo1);
     node1.auth("cluster");
     node1.flushAll();
 
-    node2 = new Jedis(nodeInfo2);
+    node2 = new CuckooJedis(nodeInfo2);
     node2.auth("cluster");
     node2.flushAll();
 
-    node3 = new Jedis(nodeInfo3);
+    node3 = new CuckooJedis(nodeInfo3);
     node3.auth("cluster");
     node3.flushAll();
 
@@ -142,7 +142,7 @@ public class ClusterBinaryJedisCommandsTest {
   @SuppressWarnings("unchecked")
   @Test
   public void testHmset() {
-    byte[] key = "jedis".getBytes();
+    byte[] key = "cuckooJedis".getBytes();
     byte[] field = "language".getBytes();
     byte[] value = "java".getBytes();
     HashMap<byte[], byte[]> map = new HashMap();

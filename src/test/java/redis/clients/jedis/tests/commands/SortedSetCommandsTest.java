@@ -24,7 +24,7 @@ import redis.clients.jedis.params.ZAddParams;
 import redis.clients.jedis.params.ZIncrByParams;
 import redis.clients.jedis.util.SafeEncoder;
 
-public class SortedSetCommandsTest extends JedisCommandTestBase {
+public class SortedSetCommandsTest extends CuckooJedisCommandTestBase {
   final byte[] bfoo = { 0x01, 0x02, 0x03, 0x04 };
   final byte[] bbar = { 0x05, 0x06, 0x07, 0x08 };
   final byte[] bcar = { 0x09, 0x0A, 0x0B, 0x0C };
@@ -43,263 +43,263 @@ public class SortedSetCommandsTest extends JedisCommandTestBase {
 
   @Test
   public void zadd() {
-    long status = jedis.zadd("foo", 1d, "a");
+    long status = cuckooJedis.zadd("foo", 1d, "a");
     assertEquals(1, status);
 
-    status = jedis.zadd("foo", 10d, "b");
+    status = cuckooJedis.zadd("foo", 10d, "b");
     assertEquals(1, status);
 
-    status = jedis.zadd("foo", 0.1d, "c");
+    status = cuckooJedis.zadd("foo", 0.1d, "c");
     assertEquals(1, status);
 
-    status = jedis.zadd("foo", 2d, "a");
+    status = cuckooJedis.zadd("foo", 2d, "a");
     assertEquals(0, status);
 
     // Binary
-    long bstatus = jedis.zadd(bfoo, 1d, ba);
+    long bstatus = cuckooJedis.zadd(bfoo, 1d, ba);
     assertEquals(1, bstatus);
 
-    bstatus = jedis.zadd(bfoo, 10d, bb);
+    bstatus = cuckooJedis.zadd(bfoo, 10d, bb);
     assertEquals(1, bstatus);
 
-    bstatus = jedis.zadd(bfoo, 0.1d, bc);
+    bstatus = cuckooJedis.zadd(bfoo, 0.1d, bc);
     assertEquals(1, bstatus);
 
-    bstatus = jedis.zadd(bfoo, 2d, ba);
+    bstatus = cuckooJedis.zadd(bfoo, 2d, ba);
     assertEquals(0, bstatus);
 
   }
 
   @Test
   public void zaddWithParams() {
-    jedis.del("foo");
+    cuckooJedis.del("foo");
 
     // xx: never add new member
-    long status = jedis.zadd("foo", 1d, "a", ZAddParams.zAddParams().xx());
+    long status = cuckooJedis.zadd("foo", 1d, "a", ZAddParams.zAddParams().xx());
     assertEquals(0L, status);
 
-    jedis.zadd("foo", 1d, "a");
+    cuckooJedis.zadd("foo", 1d, "a");
     // nx: never update current member
-    status = jedis.zadd("foo", 2d, "a", ZAddParams.zAddParams().nx());
+    status = cuckooJedis.zadd("foo", 2d, "a", ZAddParams.zAddParams().nx());
     assertEquals(0L, status);
-    assertEquals(Double.valueOf(1d), jedis.zscore("foo", "a"));
+    assertEquals(Double.valueOf(1d), cuckooJedis.zscore("foo", "a"));
 
     Map<String, Double> scoreMembers = new HashMap<String, Double>();
     scoreMembers.put("a", 2d);
     scoreMembers.put("b", 1d);
     // ch: return count of members not only added, but also updated
-    status = jedis.zadd("foo", scoreMembers, ZAddParams.zAddParams().ch());
+    status = cuckooJedis.zadd("foo", scoreMembers, ZAddParams.zAddParams().ch());
     assertEquals(2L, status);
 
     // binary
-    jedis.del(bfoo);
+    cuckooJedis.del(bfoo);
 
     // xx: never add new member
-    status = jedis.zadd(bfoo, 1d, ba, ZAddParams.zAddParams().xx());
+    status = cuckooJedis.zadd(bfoo, 1d, ba, ZAddParams.zAddParams().xx());
     assertEquals(0L, status);
 
-    jedis.zadd(bfoo, 1d, ba);
+    cuckooJedis.zadd(bfoo, 1d, ba);
     // nx: never update current member
-    status = jedis.zadd(bfoo, 2d, ba, ZAddParams.zAddParams().nx());
+    status = cuckooJedis.zadd(bfoo, 2d, ba, ZAddParams.zAddParams().nx());
     assertEquals(0L, status);
-    assertEquals(Double.valueOf(1d), jedis.zscore(bfoo, ba));
+    assertEquals(Double.valueOf(1d), cuckooJedis.zscore(bfoo, ba));
 
     Map<byte[], Double> binaryScoreMembers = new HashMap<byte[], Double>();
     binaryScoreMembers.put(ba, 2d);
     binaryScoreMembers.put(bb, 1d);
     // ch: return count of members not only added, but also updated
-    status = jedis.zadd(bfoo, binaryScoreMembers, ZAddParams.zAddParams().ch());
+    status = cuckooJedis.zadd(bfoo, binaryScoreMembers, ZAddParams.zAddParams().ch());
     assertEquals(2L, status);
   }
 
   @Test
   public void zrange() {
-    jedis.zadd("foo", 1d, "a");
-    jedis.zadd("foo", 10d, "b");
-    jedis.zadd("foo", 0.1d, "c");
-    jedis.zadd("foo", 2d, "a");
+    cuckooJedis.zadd("foo", 1d, "a");
+    cuckooJedis.zadd("foo", 10d, "b");
+    cuckooJedis.zadd("foo", 0.1d, "c");
+    cuckooJedis.zadd("foo", 2d, "a");
 
     Set<String> expected = new LinkedHashSet<String>();
     expected.add("c");
     expected.add("a");
 
-    Set<String> range = jedis.zrange("foo", 0, 1);
+    Set<String> range = cuckooJedis.zrange("foo", 0, 1);
     assertEquals(expected, range);
 
     expected.add("b");
-    range = jedis.zrange("foo", 0, 100);
+    range = cuckooJedis.zrange("foo", 0, 100);
     assertEquals(expected, range);
 
     // Binary
-    jedis.zadd(bfoo, 1d, ba);
-    jedis.zadd(bfoo, 10d, bb);
-    jedis.zadd(bfoo, 0.1d, bc);
-    jedis.zadd(bfoo, 2d, ba);
+    cuckooJedis.zadd(bfoo, 1d, ba);
+    cuckooJedis.zadd(bfoo, 10d, bb);
+    cuckooJedis.zadd(bfoo, 0.1d, bc);
+    cuckooJedis.zadd(bfoo, 2d, ba);
 
     Set<byte[]> bexpected = new LinkedHashSet<byte[]>();
     bexpected.add(bc);
     bexpected.add(ba);
 
-    Set<byte[]> brange = jedis.zrange(bfoo, 0, 1);
+    Set<byte[]> brange = cuckooJedis.zrange(bfoo, 0, 1);
     assertByteArraySetEquals(bexpected, brange);
 
     bexpected.add(bb);
-    brange = jedis.zrange(bfoo, 0, 100);
+    brange = cuckooJedis.zrange(bfoo, 0, 100);
     assertByteArraySetEquals(bexpected, brange);
 
   }
 
   @Test
   public void zrangeByLex() {
-    jedis.zadd("foo", 1, "aa");
-    jedis.zadd("foo", 1, "c");
-    jedis.zadd("foo", 1, "bb");
-    jedis.zadd("foo", 1, "d");
+    cuckooJedis.zadd("foo", 1, "aa");
+    cuckooJedis.zadd("foo", 1, "c");
+    cuckooJedis.zadd("foo", 1, "bb");
+    cuckooJedis.zadd("foo", 1, "d");
 
     Set<String> expected = new LinkedHashSet<String>();
     expected.add("bb");
     expected.add("c");
 
     // exclusive aa ~ inclusive c
-    assertEquals(expected, jedis.zrangeByLex("foo", "(aa", "[c"));
+    assertEquals(expected, cuckooJedis.zrangeByLex("foo", "(aa", "[c"));
 
     expected.clear();
     expected.add("bb");
     expected.add("c");
 
     // with LIMIT
-    assertEquals(expected, jedis.zrangeByLex("foo", "-", "+", 1, 2));
+    assertEquals(expected, cuckooJedis.zrangeByLex("foo", "-", "+", 1, 2));
   }
 
   @Test
   public void zrangeByLexBinary() {
     // binary
-    jedis.zadd(bfoo, 1, ba);
-    jedis.zadd(bfoo, 1, bc);
-    jedis.zadd(bfoo, 1, bb);
+    cuckooJedis.zadd(bfoo, 1, ba);
+    cuckooJedis.zadd(bfoo, 1, bc);
+    cuckooJedis.zadd(bfoo, 1, bb);
 
     Set<byte[]> bExpected = new LinkedHashSet<byte[]>();
     bExpected.add(bb);
 
-    assertByteArraySetEquals(bExpected, jedis.zrangeByLex(bfoo, bInclusiveB, bExclusiveC));
+    assertByteArraySetEquals(bExpected, cuckooJedis.zrangeByLex(bfoo, bInclusiveB, bExclusiveC));
 
     bExpected.clear();
     bExpected.add(ba);
     bExpected.add(bb);
 
     // with LIMIT
-    assertByteArraySetEquals(bExpected, jedis.zrangeByLex(bfoo, bLexMinusInf, bLexPlusInf, 0, 2));
+    assertByteArraySetEquals(bExpected, cuckooJedis.zrangeByLex(bfoo, bLexMinusInf, bLexPlusInf, 0, 2));
   }
 
   @Test
   public void zrevrangeByLex() {
-    jedis.zadd("foo", 1, "aa");
-    jedis.zadd("foo", 1, "c");
-    jedis.zadd("foo", 1, "bb");
-    jedis.zadd("foo", 1, "d");
+    cuckooJedis.zadd("foo", 1, "aa");
+    cuckooJedis.zadd("foo", 1, "c");
+    cuckooJedis.zadd("foo", 1, "bb");
+    cuckooJedis.zadd("foo", 1, "d");
 
     Set<String> expected = new LinkedHashSet<String>();
     expected.add("c");
     expected.add("bb");
 
     // exclusive aa ~ inclusive c
-    assertEquals(expected, jedis.zrevrangeByLex("foo", "[c", "(aa"));
+    assertEquals(expected, cuckooJedis.zrevrangeByLex("foo", "[c", "(aa"));
 
     expected.clear();
     expected.add("c");
     expected.add("bb");
 
     // with LIMIT
-    assertEquals(expected, jedis.zrevrangeByLex("foo", "+", "-", 1, 2));
+    assertEquals(expected, cuckooJedis.zrevrangeByLex("foo", "+", "-", 1, 2));
   }
 
   @Test
   public void zrevrangeByLexBinary() {
     // binary
-    jedis.zadd(bfoo, 1, ba);
-    jedis.zadd(bfoo, 1, bc);
-    jedis.zadd(bfoo, 1, bb);
+    cuckooJedis.zadd(bfoo, 1, ba);
+    cuckooJedis.zadd(bfoo, 1, bc);
+    cuckooJedis.zadd(bfoo, 1, bb);
 
     Set<byte[]> bExpected = new LinkedHashSet<byte[]>();
     bExpected.add(bb);
 
-    assertByteArraySetEquals(bExpected, jedis.zrevrangeByLex(bfoo, bExclusiveC, bInclusiveB));
+    assertByteArraySetEquals(bExpected, cuckooJedis.zrevrangeByLex(bfoo, bExclusiveC, bInclusiveB));
 
     bExpected.clear();
     bExpected.add(bb);
     bExpected.add(ba);
 
     // with LIMIT
-    assertByteArraySetEquals(bExpected, jedis.zrevrangeByLex(bfoo, bLexPlusInf, bLexMinusInf, 0, 2));
+    assertByteArraySetEquals(bExpected, cuckooJedis.zrevrangeByLex(bfoo, bLexPlusInf, bLexMinusInf, 0, 2));
   }
 
   @Test
   public void zrevrange() {
-    jedis.zadd("foo", 1d, "a");
-    jedis.zadd("foo", 10d, "b");
-    jedis.zadd("foo", 0.1d, "c");
-    jedis.zadd("foo", 2d, "a");
+    cuckooJedis.zadd("foo", 1d, "a");
+    cuckooJedis.zadd("foo", 10d, "b");
+    cuckooJedis.zadd("foo", 0.1d, "c");
+    cuckooJedis.zadd("foo", 2d, "a");
 
     Set<String> expected = new LinkedHashSet<String>();
     expected.add("b");
     expected.add("a");
 
-    Set<String> range = jedis.zrevrange("foo", 0, 1);
+    Set<String> range = cuckooJedis.zrevrange("foo", 0, 1);
     assertEquals(expected, range);
 
     expected.add("c");
-    range = jedis.zrevrange("foo", 0, 100);
+    range = cuckooJedis.zrevrange("foo", 0, 100);
     assertEquals(expected, range);
 
     // Binary
-    jedis.zadd(bfoo, 1d, ba);
-    jedis.zadd(bfoo, 10d, bb);
-    jedis.zadd(bfoo, 0.1d, bc);
-    jedis.zadd(bfoo, 2d, ba);
+    cuckooJedis.zadd(bfoo, 1d, ba);
+    cuckooJedis.zadd(bfoo, 10d, bb);
+    cuckooJedis.zadd(bfoo, 0.1d, bc);
+    cuckooJedis.zadd(bfoo, 2d, ba);
 
     Set<byte[]> bexpected = new LinkedHashSet<byte[]>();
     bexpected.add(bb);
     bexpected.add(ba);
 
-    Set<byte[]> brange = jedis.zrevrange(bfoo, 0, 1);
+    Set<byte[]> brange = cuckooJedis.zrevrange(bfoo, 0, 1);
     assertByteArraySetEquals(bexpected, brange);
 
     bexpected.add(bc);
-    brange = jedis.zrevrange(bfoo, 0, 100);
+    brange = cuckooJedis.zrevrange(bfoo, 0, 100);
     assertByteArraySetEquals(bexpected, brange);
 
   }
 
   @Test
   public void zrem() {
-    jedis.zadd("foo", 1d, "a");
-    jedis.zadd("foo", 2d, "b");
+    cuckooJedis.zadd("foo", 1d, "a");
+    cuckooJedis.zadd("foo", 2d, "b");
 
-    long status = jedis.zrem("foo", "a");
+    long status = cuckooJedis.zrem("foo", "a");
 
     Set<String> expected = new LinkedHashSet<String>();
     expected.add("b");
 
     assertEquals(1, status);
-    assertEquals(expected, jedis.zrange("foo", 0, 100));
+    assertEquals(expected, cuckooJedis.zrange("foo", 0, 100));
 
-    status = jedis.zrem("foo", "bar");
+    status = cuckooJedis.zrem("foo", "bar");
 
     assertEquals(0, status);
 
     // Binary
-    jedis.zadd(bfoo, 1d, ba);
-    jedis.zadd(bfoo, 2d, bb);
+    cuckooJedis.zadd(bfoo, 1d, ba);
+    cuckooJedis.zadd(bfoo, 2d, bb);
 
-    long bstatus = jedis.zrem(bfoo, ba);
+    long bstatus = cuckooJedis.zrem(bfoo, ba);
 
     Set<byte[]> bexpected = new LinkedHashSet<byte[]>();
     bexpected.add(bb);
 
     assertEquals(1, bstatus);
-    assertByteArraySetEquals(bexpected, jedis.zrange(bfoo, 0, 100));
+    assertByteArraySetEquals(bexpected, cuckooJedis.zrange(bfoo, 0, 100));
 
-    bstatus = jedis.zrem(bfoo, bbar);
+    bstatus = cuckooJedis.zrem(bfoo, bbar);
 
     assertEquals(0, bstatus);
 
@@ -307,314 +307,314 @@ public class SortedSetCommandsTest extends JedisCommandTestBase {
 
   @Test
   public void zincrby() {
-    jedis.zadd("foo", 1d, "a");
-    jedis.zadd("foo", 2d, "b");
+    cuckooJedis.zadd("foo", 1d, "a");
+    cuckooJedis.zadd("foo", 2d, "b");
 
-    double score = jedis.zincrby("foo", 2d, "a");
+    double score = cuckooJedis.zincrby("foo", 2d, "a");
 
     Set<String> expected = new LinkedHashSet<String>();
     expected.add("a");
     expected.add("b");
 
     assertEquals(3d, score, 0);
-    assertEquals(expected, jedis.zrange("foo", 0, 100));
+    assertEquals(expected, cuckooJedis.zrange("foo", 0, 100));
 
     // Binary
-    jedis.zadd(bfoo, 1d, ba);
-    jedis.zadd(bfoo, 2d, bb);
+    cuckooJedis.zadd(bfoo, 1d, ba);
+    cuckooJedis.zadd(bfoo, 2d, bb);
 
-    double bscore = jedis.zincrby(bfoo, 2d, ba);
+    double bscore = cuckooJedis.zincrby(bfoo, 2d, ba);
 
     Set<byte[]> bexpected = new LinkedHashSet<byte[]>();
     bexpected.add(bb);
     bexpected.add(ba);
 
     assertEquals(3d, bscore, 0);
-    assertByteArraySetEquals(bexpected, jedis.zrange(bfoo, 0, 100));
+    assertByteArraySetEquals(bexpected, cuckooJedis.zrange(bfoo, 0, 100));
 
   }
 
   @Test
   public void zincrbyWithParams() {
-    jedis.del("foo");
+    cuckooJedis.del("foo");
 
     // xx: never add new member
-    Double score = jedis.zincrby("foo", 2d, "a", ZIncrByParams.zIncrByParams().xx());
+    Double score = cuckooJedis.zincrby("foo", 2d, "a", ZIncrByParams.zIncrByParams().xx());
     assertNull(score);
 
-    jedis.zadd("foo", 2d, "a");
+    cuckooJedis.zadd("foo", 2d, "a");
 
     // nx: never update current member
-    score = jedis.zincrby("foo", 1d, "a", ZIncrByParams.zIncrByParams().nx());
+    score = cuckooJedis.zincrby("foo", 1d, "a", ZIncrByParams.zIncrByParams().nx());
     assertNull(score);
-    assertEquals(Double.valueOf(2d), jedis.zscore("foo", "a"));
+    assertEquals(Double.valueOf(2d), cuckooJedis.zscore("foo", "a"));
 
     // Binary
 
-    jedis.del(bfoo);
+    cuckooJedis.del(bfoo);
 
     // xx: never add new member
-    score = jedis.zincrby(bfoo, 2d, ba, ZIncrByParams.zIncrByParams().xx());
+    score = cuckooJedis.zincrby(bfoo, 2d, ba, ZIncrByParams.zIncrByParams().xx());
     assertNull(score);
 
-    jedis.zadd(bfoo, 2d, ba);
+    cuckooJedis.zadd(bfoo, 2d, ba);
 
     // nx: never update current member
-    score = jedis.zincrby(bfoo, 1d, ba, ZIncrByParams.zIncrByParams().nx());
+    score = cuckooJedis.zincrby(bfoo, 1d, ba, ZIncrByParams.zIncrByParams().nx());
     assertNull(score);
-    assertEquals(Double.valueOf(2d), jedis.zscore(bfoo, ba));
+    assertEquals(Double.valueOf(2d), cuckooJedis.zscore(bfoo, ba));
   }
 
   @Test
   public void zrank() {
-    jedis.zadd("foo", 1d, "a");
-    jedis.zadd("foo", 2d, "b");
+    cuckooJedis.zadd("foo", 1d, "a");
+    cuckooJedis.zadd("foo", 2d, "b");
 
-    long rank = jedis.zrank("foo", "a");
+    long rank = cuckooJedis.zrank("foo", "a");
     assertEquals(0, rank);
 
-    rank = jedis.zrank("foo", "b");
+    rank = cuckooJedis.zrank("foo", "b");
     assertEquals(1, rank);
 
-    assertNull(jedis.zrank("car", "b"));
+    assertNull(cuckooJedis.zrank("car", "b"));
 
     // Binary
-    jedis.zadd(bfoo, 1d, ba);
-    jedis.zadd(bfoo, 2d, bb);
+    cuckooJedis.zadd(bfoo, 1d, ba);
+    cuckooJedis.zadd(bfoo, 2d, bb);
 
-    long brank = jedis.zrank(bfoo, ba);
+    long brank = cuckooJedis.zrank(bfoo, ba);
     assertEquals(0, brank);
 
-    brank = jedis.zrank(bfoo, bb);
+    brank = cuckooJedis.zrank(bfoo, bb);
     assertEquals(1, brank);
 
-    assertNull(jedis.zrank(bcar, bb));
+    assertNull(cuckooJedis.zrank(bcar, bb));
 
   }
 
   @Test
   public void zrevrank() {
-    jedis.zadd("foo", 1d, "a");
-    jedis.zadd("foo", 2d, "b");
+    cuckooJedis.zadd("foo", 1d, "a");
+    cuckooJedis.zadd("foo", 2d, "b");
 
-    long rank = jedis.zrevrank("foo", "a");
+    long rank = cuckooJedis.zrevrank("foo", "a");
     assertEquals(1, rank);
 
-    rank = jedis.zrevrank("foo", "b");
+    rank = cuckooJedis.zrevrank("foo", "b");
     assertEquals(0, rank);
 
     // Binary
-    jedis.zadd(bfoo, 1d, ba);
-    jedis.zadd(bfoo, 2d, bb);
+    cuckooJedis.zadd(bfoo, 1d, ba);
+    cuckooJedis.zadd(bfoo, 2d, bb);
 
-    long brank = jedis.zrevrank(bfoo, ba);
+    long brank = cuckooJedis.zrevrank(bfoo, ba);
     assertEquals(1, brank);
 
-    brank = jedis.zrevrank(bfoo, bb);
+    brank = cuckooJedis.zrevrank(bfoo, bb);
     assertEquals(0, brank);
 
   }
 
   @Test
   public void zrangeWithScores() {
-    jedis.zadd("foo", 1d, "a");
-    jedis.zadd("foo", 10d, "b");
-    jedis.zadd("foo", 0.1d, "c");
-    jedis.zadd("foo", 2d, "a");
+    cuckooJedis.zadd("foo", 1d, "a");
+    cuckooJedis.zadd("foo", 10d, "b");
+    cuckooJedis.zadd("foo", 0.1d, "c");
+    cuckooJedis.zadd("foo", 2d, "a");
 
     Set<Tuple> expected = new LinkedHashSet<Tuple>();
     expected.add(new Tuple("c", 0.1d));
     expected.add(new Tuple("a", 2d));
 
-    Set<Tuple> range = jedis.zrangeWithScores("foo", 0, 1);
+    Set<Tuple> range = cuckooJedis.zrangeWithScores("foo", 0, 1);
     assertEquals(expected, range);
 
     expected.add(new Tuple("b", 10d));
-    range = jedis.zrangeWithScores("foo", 0, 100);
+    range = cuckooJedis.zrangeWithScores("foo", 0, 100);
     assertEquals(expected, range);
 
     // Binary
-    jedis.zadd(bfoo, 1d, ba);
-    jedis.zadd(bfoo, 10d, bb);
-    jedis.zadd(bfoo, 0.1d, bc);
-    jedis.zadd(bfoo, 2d, ba);
+    cuckooJedis.zadd(bfoo, 1d, ba);
+    cuckooJedis.zadd(bfoo, 10d, bb);
+    cuckooJedis.zadd(bfoo, 0.1d, bc);
+    cuckooJedis.zadd(bfoo, 2d, ba);
 
     Set<Tuple> bexpected = new LinkedHashSet<Tuple>();
     bexpected.add(new Tuple(bc, 0.1d));
     bexpected.add(new Tuple(ba, 2d));
 
-    Set<Tuple> brange = jedis.zrangeWithScores(bfoo, 0, 1);
+    Set<Tuple> brange = cuckooJedis.zrangeWithScores(bfoo, 0, 1);
     assertEquals(bexpected, brange);
 
     bexpected.add(new Tuple(bb, 10d));
-    brange = jedis.zrangeWithScores(bfoo, 0, 100);
+    brange = cuckooJedis.zrangeWithScores(bfoo, 0, 100);
     assertEquals(bexpected, brange);
 
   }
 
   @Test
   public void zrevrangeWithScores() {
-    jedis.zadd("foo", 1d, "a");
-    jedis.zadd("foo", 10d, "b");
-    jedis.zadd("foo", 0.1d, "c");
-    jedis.zadd("foo", 2d, "a");
+    cuckooJedis.zadd("foo", 1d, "a");
+    cuckooJedis.zadd("foo", 10d, "b");
+    cuckooJedis.zadd("foo", 0.1d, "c");
+    cuckooJedis.zadd("foo", 2d, "a");
 
     Set<Tuple> expected = new LinkedHashSet<Tuple>();
     expected.add(new Tuple("b", 10d));
     expected.add(new Tuple("a", 2d));
 
-    Set<Tuple> range = jedis.zrevrangeWithScores("foo", 0, 1);
+    Set<Tuple> range = cuckooJedis.zrevrangeWithScores("foo", 0, 1);
     assertEquals(expected, range);
 
     expected.add(new Tuple("c", 0.1d));
-    range = jedis.zrevrangeWithScores("foo", 0, 100);
+    range = cuckooJedis.zrevrangeWithScores("foo", 0, 100);
     assertEquals(expected, range);
 
     // Binary
-    jedis.zadd(bfoo, 1d, ba);
-    jedis.zadd(bfoo, 10d, bb);
-    jedis.zadd(bfoo, 0.1d, bc);
-    jedis.zadd(bfoo, 2d, ba);
+    cuckooJedis.zadd(bfoo, 1d, ba);
+    cuckooJedis.zadd(bfoo, 10d, bb);
+    cuckooJedis.zadd(bfoo, 0.1d, bc);
+    cuckooJedis.zadd(bfoo, 2d, ba);
 
     Set<Tuple> bexpected = new LinkedHashSet<Tuple>();
     bexpected.add(new Tuple(bb, 10d));
     bexpected.add(new Tuple(ba, 2d));
 
-    Set<Tuple> brange = jedis.zrevrangeWithScores(bfoo, 0, 1);
+    Set<Tuple> brange = cuckooJedis.zrevrangeWithScores(bfoo, 0, 1);
     assertEquals(bexpected, brange);
 
     bexpected.add(new Tuple(bc, 0.1d));
-    brange = jedis.zrevrangeWithScores(bfoo, 0, 100);
+    brange = cuckooJedis.zrevrangeWithScores(bfoo, 0, 100);
     assertEquals(bexpected, brange);
 
   }
 
   @Test
   public void zcard() {
-    jedis.zadd("foo", 1d, "a");
-    jedis.zadd("foo", 10d, "b");
-    jedis.zadd("foo", 0.1d, "c");
-    jedis.zadd("foo", 2d, "a");
+    cuckooJedis.zadd("foo", 1d, "a");
+    cuckooJedis.zadd("foo", 10d, "b");
+    cuckooJedis.zadd("foo", 0.1d, "c");
+    cuckooJedis.zadd("foo", 2d, "a");
 
-    long size = jedis.zcard("foo");
+    long size = cuckooJedis.zcard("foo");
     assertEquals(3, size);
 
     // Binary
-    jedis.zadd(bfoo, 1d, ba);
-    jedis.zadd(bfoo, 10d, bb);
-    jedis.zadd(bfoo, 0.1d, bc);
-    jedis.zadd(bfoo, 2d, ba);
+    cuckooJedis.zadd(bfoo, 1d, ba);
+    cuckooJedis.zadd(bfoo, 10d, bb);
+    cuckooJedis.zadd(bfoo, 0.1d, bc);
+    cuckooJedis.zadd(bfoo, 2d, ba);
 
-    long bsize = jedis.zcard(bfoo);
+    long bsize = cuckooJedis.zcard(bfoo);
     assertEquals(3, bsize);
 
   }
 
   @Test
   public void zscore() {
-    jedis.zadd("foo", 1d, "a");
-    jedis.zadd("foo", 10d, "b");
-    jedis.zadd("foo", 0.1d, "c");
-    jedis.zadd("foo", 2d, "a");
+    cuckooJedis.zadd("foo", 1d, "a");
+    cuckooJedis.zadd("foo", 10d, "b");
+    cuckooJedis.zadd("foo", 0.1d, "c");
+    cuckooJedis.zadd("foo", 2d, "a");
 
-    Double score = jedis.zscore("foo", "b");
+    Double score = cuckooJedis.zscore("foo", "b");
     assertEquals((Double) 10d, score);
 
-    score = jedis.zscore("foo", "c");
+    score = cuckooJedis.zscore("foo", "c");
     assertEquals((Double) 0.1d, score);
 
-    score = jedis.zscore("foo", "s");
+    score = cuckooJedis.zscore("foo", "s");
     assertNull(score);
 
     // Binary
-    jedis.zadd(bfoo, 1d, ba);
-    jedis.zadd(bfoo, 10d, bb);
-    jedis.zadd(bfoo, 0.1d, bc);
-    jedis.zadd(bfoo, 2d, ba);
+    cuckooJedis.zadd(bfoo, 1d, ba);
+    cuckooJedis.zadd(bfoo, 10d, bb);
+    cuckooJedis.zadd(bfoo, 0.1d, bc);
+    cuckooJedis.zadd(bfoo, 2d, ba);
 
-    Double bscore = jedis.zscore(bfoo, bb);
+    Double bscore = cuckooJedis.zscore(bfoo, bb);
     assertEquals((Double) 10d, bscore);
 
-    bscore = jedis.zscore(bfoo, bc);
+    bscore = cuckooJedis.zscore(bfoo, bc);
     assertEquals((Double) 0.1d, bscore);
 
-    bscore = jedis.zscore(bfoo, SafeEncoder.encode("s"));
+    bscore = cuckooJedis.zscore(bfoo, SafeEncoder.encode("s"));
     assertNull(bscore);
 
   }
 
   @Test
   public void zcount() {
-    jedis.zadd("foo", 1d, "a");
-    jedis.zadd("foo", 10d, "b");
-    jedis.zadd("foo", 0.1d, "c");
-    jedis.zadd("foo", 2d, "a");
+    cuckooJedis.zadd("foo", 1d, "a");
+    cuckooJedis.zadd("foo", 10d, "b");
+    cuckooJedis.zadd("foo", 0.1d, "c");
+    cuckooJedis.zadd("foo", 2d, "a");
 
-    long result = jedis.zcount("foo", 0.01d, 2.1d);
+    long result = cuckooJedis.zcount("foo", 0.01d, 2.1d);
 
     assertEquals(2, result);
 
-    result = jedis.zcount("foo", "(0.01", "+inf");
+    result = cuckooJedis.zcount("foo", "(0.01", "+inf");
 
     assertEquals(3, result);
 
     // Binary
-    jedis.zadd(bfoo, 1d, ba);
-    jedis.zadd(bfoo, 10d, bb);
-    jedis.zadd(bfoo, 0.1d, bc);
-    jedis.zadd(bfoo, 2d, ba);
+    cuckooJedis.zadd(bfoo, 1d, ba);
+    cuckooJedis.zadd(bfoo, 10d, bb);
+    cuckooJedis.zadd(bfoo, 0.1d, bc);
+    cuckooJedis.zadd(bfoo, 2d, ba);
 
-    long bresult = jedis.zcount(bfoo, 0.01d, 2.1d);
+    long bresult = cuckooJedis.zcount(bfoo, 0.01d, 2.1d);
 
     assertEquals(2, bresult);
 
-    bresult = jedis.zcount(bfoo, SafeEncoder.encode("(0.01"), SafeEncoder.encode("+inf"));
+    bresult = cuckooJedis.zcount(bfoo, SafeEncoder.encode("(0.01"), SafeEncoder.encode("+inf"));
 
     assertEquals(3, bresult);
   }
 
   @Test
   public void zlexcount() {
-    jedis.zadd("foo", 1, "a");
-    jedis.zadd("foo", 1, "b");
-    jedis.zadd("foo", 1, "c");
-    jedis.zadd("foo", 1, "aa");
+    cuckooJedis.zadd("foo", 1, "a");
+    cuckooJedis.zadd("foo", 1, "b");
+    cuckooJedis.zadd("foo", 1, "c");
+    cuckooJedis.zadd("foo", 1, "aa");
 
-    long result = jedis.zlexcount("foo", "[aa", "(c");
+    long result = cuckooJedis.zlexcount("foo", "[aa", "(c");
     assertEquals(2, result);
 
-    result = jedis.zlexcount("foo", "-", "+");
+    result = cuckooJedis.zlexcount("foo", "-", "+");
     assertEquals(4, result);
 
-    result = jedis.zlexcount("foo", "-", "(c");
+    result = cuckooJedis.zlexcount("foo", "-", "(c");
     assertEquals(3, result);
 
-    result = jedis.zlexcount("foo", "[aa", "+");
+    result = cuckooJedis.zlexcount("foo", "[aa", "+");
     assertEquals(3, result);
   }
 
   @Test
   public void zlexcountBinary() {
     // Binary
-    jedis.zadd(bfoo, 1, ba);
-    jedis.zadd(bfoo, 1, bc);
-    jedis.zadd(bfoo, 1, bb);
+    cuckooJedis.zadd(bfoo, 1, ba);
+    cuckooJedis.zadd(bfoo, 1, bc);
+    cuckooJedis.zadd(bfoo, 1, bb);
 
-    long result = jedis.zlexcount(bfoo, bInclusiveB, bExclusiveC);
+    long result = cuckooJedis.zlexcount(bfoo, bInclusiveB, bExclusiveC);
     assertEquals(1, result);
 
-    result = jedis.zlexcount(bfoo, bLexMinusInf, bLexPlusInf);
+    result = cuckooJedis.zlexcount(bfoo, bLexMinusInf, bLexPlusInf);
     assertEquals(3, result);
   }
 
   @Test
   public void zrangebyscore() {
-    jedis.zadd("foo", 1d, "a");
-    jedis.zadd("foo", 10d, "b");
-    jedis.zadd("foo", 0.1d, "c");
-    jedis.zadd("foo", 2d, "a");
+    cuckooJedis.zadd("foo", 1d, "a");
+    cuckooJedis.zadd("foo", 10d, "b");
+    cuckooJedis.zadd("foo", 0.1d, "c");
+    cuckooJedis.zadd("foo", 2d, "a");
 
-    Set<String> range = jedis.zrangeByScore("foo", 0d, 2d);
+    Set<String> range = cuckooJedis.zrangeByScore("foo", 0d, 2d);
 
     Set<String> expected = new LinkedHashSet<String>();
     expected.add("c");
@@ -622,15 +622,15 @@ public class SortedSetCommandsTest extends JedisCommandTestBase {
 
     assertEquals(expected, range);
 
-    range = jedis.zrangeByScore("foo", 0d, 2d, 0, 1);
+    range = cuckooJedis.zrangeByScore("foo", 0d, 2d, 0, 1);
 
     expected = new LinkedHashSet<String>();
     expected.add("c");
 
     assertEquals(expected, range);
 
-    range = jedis.zrangeByScore("foo", 0d, 2d, 1, 1);
-    Set<String> range2 = jedis.zrangeByScore("foo", "-inf", "(2");
+    range = cuckooJedis.zrangeByScore("foo", 0d, 2d, 1, 1);
+    Set<String> range2 = cuckooJedis.zrangeByScore("foo", "-inf", "(2");
     assertEquals(expected, range2);
 
     expected = new LinkedHashSet<String>();
@@ -639,12 +639,12 @@ public class SortedSetCommandsTest extends JedisCommandTestBase {
     assertEquals(expected, range);
 
     // Binary
-    jedis.zadd(bfoo, 1d, ba);
-    jedis.zadd(bfoo, 10d, bb);
-    jedis.zadd(bfoo, 0.1d, bc);
-    jedis.zadd(bfoo, 2d, ba);
+    cuckooJedis.zadd(bfoo, 1d, ba);
+    cuckooJedis.zadd(bfoo, 10d, bb);
+    cuckooJedis.zadd(bfoo, 0.1d, bc);
+    cuckooJedis.zadd(bfoo, 2d, ba);
 
-    Set<byte[]> brange = jedis.zrangeByScore(bfoo, 0d, 2d);
+    Set<byte[]> brange = cuckooJedis.zrangeByScore(bfoo, 0d, 2d);
 
     Set<byte[]> bexpected = new LinkedHashSet<byte[]>();
     bexpected.add(bc);
@@ -652,15 +652,15 @@ public class SortedSetCommandsTest extends JedisCommandTestBase {
 
     assertByteArraySetEquals(bexpected, brange);
 
-    brange = jedis.zrangeByScore(bfoo, 0d, 2d, 0, 1);
+    brange = cuckooJedis.zrangeByScore(bfoo, 0d, 2d, 0, 1);
 
     bexpected = new LinkedHashSet<byte[]>();
     bexpected.add(bc);
 
     assertByteArraySetEquals(bexpected, brange);
 
-    brange = jedis.zrangeByScore(bfoo, 0d, 2d, 1, 1);
-    Set<byte[]> brange2 = jedis.zrangeByScore(bfoo, SafeEncoder.encode("-inf"),
+    brange = cuckooJedis.zrangeByScore(bfoo, 0d, 2d, 1, 1);
+    Set<byte[]> brange2 = cuckooJedis.zrangeByScore(bfoo, SafeEncoder.encode("-inf"),
       SafeEncoder.encode("(2"));
     assertByteArraySetEquals(bexpected, brange2);
 
@@ -673,32 +673,32 @@ public class SortedSetCommandsTest extends JedisCommandTestBase {
 
   @Test
   public void zrevrangebyscore() {
-    jedis.zadd("foo", 1.0d, "a");
-    jedis.zadd("foo", 2.0d, "b");
-    jedis.zadd("foo", 3.0d, "c");
-    jedis.zadd("foo", 4.0d, "d");
-    jedis.zadd("foo", 5.0d, "e");
+    cuckooJedis.zadd("foo", 1.0d, "a");
+    cuckooJedis.zadd("foo", 2.0d, "b");
+    cuckooJedis.zadd("foo", 3.0d, "c");
+    cuckooJedis.zadd("foo", 4.0d, "d");
+    cuckooJedis.zadd("foo", 5.0d, "e");
 
-    Set<String> range = jedis.zrevrangeByScore("foo", 3d, Double.NEGATIVE_INFINITY, 0, 1);
+    Set<String> range = cuckooJedis.zrevrangeByScore("foo", 3d, Double.NEGATIVE_INFINITY, 0, 1);
     Set<String> expected = new LinkedHashSet<String>();
     expected.add("c");
 
     assertEquals(expected, range);
 
-    range = jedis.zrevrangeByScore("foo", 3.5d, Double.NEGATIVE_INFINITY, 0, 2);
+    range = cuckooJedis.zrevrangeByScore("foo", 3.5d, Double.NEGATIVE_INFINITY, 0, 2);
     expected = new LinkedHashSet<String>();
     expected.add("c");
     expected.add("b");
 
     assertEquals(expected, range);
 
-    range = jedis.zrevrangeByScore("foo", 3.5d, Double.NEGATIVE_INFINITY, 1, 1);
+    range = cuckooJedis.zrevrangeByScore("foo", 3.5d, Double.NEGATIVE_INFINITY, 1, 1);
     expected = new LinkedHashSet<String>();
     expected.add("b");
 
     assertEquals(expected, range);
 
-    range = jedis.zrevrangeByScore("foo", 4d, 2d);
+    range = cuckooJedis.zrevrangeByScore("foo", 4d, 2d);
     expected = new LinkedHashSet<String>();
     expected.add("d");
     expected.add("c");
@@ -706,19 +706,19 @@ public class SortedSetCommandsTest extends JedisCommandTestBase {
 
     assertEquals(expected, range);
 
-    range = jedis.zrevrangeByScore("foo", "+inf", "(4");
+    range = cuckooJedis.zrevrangeByScore("foo", "+inf", "(4");
     expected = new LinkedHashSet<String>();
     expected.add("e");
 
     assertEquals(expected, range);
 
     // Binary
-    jedis.zadd(bfoo, 1d, ba);
-    jedis.zadd(bfoo, 10d, bb);
-    jedis.zadd(bfoo, 0.1d, bc);
-    jedis.zadd(bfoo, 2d, ba);
+    cuckooJedis.zadd(bfoo, 1d, ba);
+    cuckooJedis.zadd(bfoo, 10d, bb);
+    cuckooJedis.zadd(bfoo, 0.1d, bc);
+    cuckooJedis.zadd(bfoo, 2d, ba);
 
-    Set<byte[]> brange = jedis.zrevrangeByScore(bfoo, 2d, 0d);
+    Set<byte[]> brange = cuckooJedis.zrevrangeByScore(bfoo, 2d, 0d);
 
     Set<byte[]> bexpected = new LinkedHashSet<byte[]>();
     bexpected.add(bc);
@@ -726,14 +726,14 @@ public class SortedSetCommandsTest extends JedisCommandTestBase {
 
     assertByteArraySetEquals(bexpected, brange);
 
-    brange = jedis.zrevrangeByScore(bfoo, 2d, 0d, 0, 1);
+    brange = cuckooJedis.zrevrangeByScore(bfoo, 2d, 0d, 0, 1);
 
     bexpected = new LinkedHashSet<byte[]>();
     bexpected.add(ba);
 
     assertByteArraySetEquals(bexpected, brange);
 
-    Set<byte[]> brange2 = jedis.zrevrangeByScore(bfoo, SafeEncoder.encode("+inf"),
+    Set<byte[]> brange2 = cuckooJedis.zrevrangeByScore(bfoo, SafeEncoder.encode("+inf"),
       SafeEncoder.encode("(2"));
 
     bexpected = new LinkedHashSet<byte[]>();
@@ -741,7 +741,7 @@ public class SortedSetCommandsTest extends JedisCommandTestBase {
 
     assertByteArraySetEquals(bexpected, brange2);
 
-    brange = jedis.zrevrangeByScore(bfoo, 2d, 0d, 1, 1);
+    brange = cuckooJedis.zrevrangeByScore(bfoo, 2d, 0d, 1, 1);
     bexpected = new LinkedHashSet<byte[]>();
     bexpected.add(bc);
 
@@ -750,12 +750,12 @@ public class SortedSetCommandsTest extends JedisCommandTestBase {
 
   @Test
   public void zrangebyscoreWithScores() {
-    jedis.zadd("foo", 1d, "a");
-    jedis.zadd("foo", 10d, "b");
-    jedis.zadd("foo", 0.1d, "c");
-    jedis.zadd("foo", 2d, "a");
+    cuckooJedis.zadd("foo", 1d, "a");
+    cuckooJedis.zadd("foo", 10d, "b");
+    cuckooJedis.zadd("foo", 0.1d, "c");
+    cuckooJedis.zadd("foo", 2d, "a");
 
-    Set<Tuple> range = jedis.zrangeByScoreWithScores("foo", 0d, 2d);
+    Set<Tuple> range = cuckooJedis.zrangeByScoreWithScores("foo", 0d, 2d);
 
     Set<Tuple> expected = new LinkedHashSet<Tuple>();
     expected.add(new Tuple("c", 0.1d));
@@ -763,14 +763,14 @@ public class SortedSetCommandsTest extends JedisCommandTestBase {
 
     assertEquals(expected, range);
 
-    range = jedis.zrangeByScoreWithScores("foo", 0d, 2d, 0, 1);
+    range = cuckooJedis.zrangeByScoreWithScores("foo", 0d, 2d, 0, 1);
 
     expected = new LinkedHashSet<Tuple>();
     expected.add(new Tuple("c", 0.1d));
 
     assertEquals(expected, range);
 
-    range = jedis.zrangeByScoreWithScores("foo", 0d, 2d, 1, 1);
+    range = cuckooJedis.zrangeByScoreWithScores("foo", 0d, 2d, 1, 1);
 
     expected = new LinkedHashSet<Tuple>();
     expected.add(new Tuple("a", 2d));
@@ -779,12 +779,12 @@ public class SortedSetCommandsTest extends JedisCommandTestBase {
 
     // Binary
 
-    jedis.zadd(bfoo, 1d, ba);
-    jedis.zadd(bfoo, 10d, bb);
-    jedis.zadd(bfoo, 0.1d, bc);
-    jedis.zadd(bfoo, 2d, ba);
+    cuckooJedis.zadd(bfoo, 1d, ba);
+    cuckooJedis.zadd(bfoo, 10d, bb);
+    cuckooJedis.zadd(bfoo, 0.1d, bc);
+    cuckooJedis.zadd(bfoo, 2d, ba);
 
-    Set<Tuple> brange = jedis.zrangeByScoreWithScores(bfoo, 0d, 2d);
+    Set<Tuple> brange = cuckooJedis.zrangeByScoreWithScores(bfoo, 0d, 2d);
 
     Set<Tuple> bexpected = new LinkedHashSet<Tuple>();
     bexpected.add(new Tuple(bc, 0.1d));
@@ -792,14 +792,14 @@ public class SortedSetCommandsTest extends JedisCommandTestBase {
 
     assertEquals(bexpected, brange);
 
-    brange = jedis.zrangeByScoreWithScores(bfoo, 0d, 2d, 0, 1);
+    brange = cuckooJedis.zrangeByScoreWithScores(bfoo, 0d, 2d, 0, 1);
 
     bexpected = new LinkedHashSet<Tuple>();
     bexpected.add(new Tuple(bc, 0.1d));
 
     assertEquals(bexpected, brange);
 
-    brange = jedis.zrangeByScoreWithScores(bfoo, 0d, 2d, 1, 1);
+    brange = cuckooJedis.zrangeByScoreWithScores(bfoo, 0d, 2d, 1, 1);
 
     bexpected = new LinkedHashSet<Tuple>();
     bexpected.add(new Tuple(ba, 2d));
@@ -810,32 +810,32 @@ public class SortedSetCommandsTest extends JedisCommandTestBase {
 
   @Test
   public void zrevrangebyscoreWithScores() {
-    jedis.zadd("foo", 1.0d, "a");
-    jedis.zadd("foo", 2.0d, "b");
-    jedis.zadd("foo", 3.0d, "c");
-    jedis.zadd("foo", 4.0d, "d");
-    jedis.zadd("foo", 5.0d, "e");
+    cuckooJedis.zadd("foo", 1.0d, "a");
+    cuckooJedis.zadd("foo", 2.0d, "b");
+    cuckooJedis.zadd("foo", 3.0d, "c");
+    cuckooJedis.zadd("foo", 4.0d, "d");
+    cuckooJedis.zadd("foo", 5.0d, "e");
 
-    Set<Tuple> range = jedis.zrevrangeByScoreWithScores("foo", 3d, Double.NEGATIVE_INFINITY, 0, 1);
+    Set<Tuple> range = cuckooJedis.zrevrangeByScoreWithScores("foo", 3d, Double.NEGATIVE_INFINITY, 0, 1);
     Set<Tuple> expected = new LinkedHashSet<Tuple>();
     expected.add(new Tuple("c", 3.0d));
 
     assertEquals(expected, range);
 
-    range = jedis.zrevrangeByScoreWithScores("foo", 3.5d, Double.NEGATIVE_INFINITY, 0, 2);
+    range = cuckooJedis.zrevrangeByScoreWithScores("foo", 3.5d, Double.NEGATIVE_INFINITY, 0, 2);
     expected = new LinkedHashSet<Tuple>();
     expected.add(new Tuple("c", 3.0d));
     expected.add(new Tuple("b", 2.0d));
 
     assertEquals(expected, range);
 
-    range = jedis.zrevrangeByScoreWithScores("foo", 3.5d, Double.NEGATIVE_INFINITY, 1, 1);
+    range = cuckooJedis.zrevrangeByScoreWithScores("foo", 3.5d, Double.NEGATIVE_INFINITY, 1, 1);
     expected = new LinkedHashSet<Tuple>();
     expected.add(new Tuple("b", 2.0d));
 
     assertEquals(expected, range);
 
-    range = jedis.zrevrangeByScoreWithScores("foo", 4d, 2d);
+    range = cuckooJedis.zrevrangeByScoreWithScores("foo", 4d, 2d);
     expected = new LinkedHashSet<Tuple>();
     expected.add(new Tuple("d", 4.0d));
     expected.add(new Tuple("c", 3.0d));
@@ -844,12 +844,12 @@ public class SortedSetCommandsTest extends JedisCommandTestBase {
     assertEquals(expected, range);
 
     // Binary
-    jedis.zadd(bfoo, 1d, ba);
-    jedis.zadd(bfoo, 10d, bb);
-    jedis.zadd(bfoo, 0.1d, bc);
-    jedis.zadd(bfoo, 2d, ba);
+    cuckooJedis.zadd(bfoo, 1d, ba);
+    cuckooJedis.zadd(bfoo, 10d, bb);
+    cuckooJedis.zadd(bfoo, 0.1d, bc);
+    cuckooJedis.zadd(bfoo, 2d, ba);
 
-    Set<Tuple> brange = jedis.zrevrangeByScoreWithScores(bfoo, 2d, 0d);
+    Set<Tuple> brange = cuckooJedis.zrevrangeByScoreWithScores(bfoo, 2d, 0d);
 
     Set<Tuple> bexpected = new LinkedHashSet<Tuple>();
     bexpected.add(new Tuple(bc, 0.1d));
@@ -857,14 +857,14 @@ public class SortedSetCommandsTest extends JedisCommandTestBase {
 
     assertEquals(bexpected, brange);
 
-    brange = jedis.zrevrangeByScoreWithScores(bfoo, 2d, 0d, 0, 1);
+    brange = cuckooJedis.zrevrangeByScoreWithScores(bfoo, 2d, 0d, 0, 1);
 
     bexpected = new LinkedHashSet<Tuple>();
     bexpected.add(new Tuple(ba, 2d));
 
     assertEquals(bexpected, brange);
 
-    brange = jedis.zrevrangeByScoreWithScores(bfoo, 2d, 0d, 1, 1);
+    brange = cuckooJedis.zrevrangeByScoreWithScores(bfoo, 2d, 0d, 1, 1);
 
     bexpected = new LinkedHashSet<Tuple>();
     bexpected.add(new Tuple(bc, 0.1d));
@@ -874,12 +874,12 @@ public class SortedSetCommandsTest extends JedisCommandTestBase {
 
   @Test
   public void zremrangeByRank() {
-    jedis.zadd("foo", 1d, "a");
-    jedis.zadd("foo", 10d, "b");
-    jedis.zadd("foo", 0.1d, "c");
-    jedis.zadd("foo", 2d, "a");
+    cuckooJedis.zadd("foo", 1d, "a");
+    cuckooJedis.zadd("foo", 10d, "b");
+    cuckooJedis.zadd("foo", 0.1d, "c");
+    cuckooJedis.zadd("foo", 2d, "a");
 
-    long result = jedis.zremrangeByRank("foo", 0, 0);
+    long result = cuckooJedis.zremrangeByRank("foo", 0, 0);
 
     assertEquals(1, result);
 
@@ -887,15 +887,15 @@ public class SortedSetCommandsTest extends JedisCommandTestBase {
     expected.add("a");
     expected.add("b");
 
-    assertEquals(expected, jedis.zrange("foo", 0, 100));
+    assertEquals(expected, cuckooJedis.zrange("foo", 0, 100));
 
     // Binary
-    jedis.zadd(bfoo, 1d, ba);
-    jedis.zadd(bfoo, 10d, bb);
-    jedis.zadd(bfoo, 0.1d, bc);
-    jedis.zadd(bfoo, 2d, ba);
+    cuckooJedis.zadd(bfoo, 1d, ba);
+    cuckooJedis.zadd(bfoo, 10d, bb);
+    cuckooJedis.zadd(bfoo, 0.1d, bc);
+    cuckooJedis.zadd(bfoo, 2d, ba);
 
-    long bresult = jedis.zremrangeByRank(bfoo, 0, 0);
+    long bresult = cuckooJedis.zremrangeByRank(bfoo, 0, 0);
 
     assertEquals(1, bresult);
 
@@ -903,50 +903,50 @@ public class SortedSetCommandsTest extends JedisCommandTestBase {
     bexpected.add(ba);
     bexpected.add(bb);
 
-    assertByteArraySetEquals(bexpected, jedis.zrange(bfoo, 0, 100));
+    assertByteArraySetEquals(bexpected, cuckooJedis.zrange(bfoo, 0, 100));
 
   }
 
   @Test
   public void zremrangeByScore() {
-    jedis.zadd("foo", 1d, "a");
-    jedis.zadd("foo", 10d, "b");
-    jedis.zadd("foo", 0.1d, "c");
-    jedis.zadd("foo", 2d, "a");
+    cuckooJedis.zadd("foo", 1d, "a");
+    cuckooJedis.zadd("foo", 10d, "b");
+    cuckooJedis.zadd("foo", 0.1d, "c");
+    cuckooJedis.zadd("foo", 2d, "a");
 
-    long result = jedis.zremrangeByScore("foo", 0, 2);
+    long result = cuckooJedis.zremrangeByScore("foo", 0, 2);
 
     assertEquals(2, result);
 
     Set<String> expected = new LinkedHashSet<String>();
     expected.add("b");
 
-    assertEquals(expected, jedis.zrange("foo", 0, 100));
+    assertEquals(expected, cuckooJedis.zrange("foo", 0, 100));
 
     // Binary
-    jedis.zadd(bfoo, 1d, ba);
-    jedis.zadd(bfoo, 10d, bb);
-    jedis.zadd(bfoo, 0.1d, bc);
-    jedis.zadd(bfoo, 2d, ba);
+    cuckooJedis.zadd(bfoo, 1d, ba);
+    cuckooJedis.zadd(bfoo, 10d, bb);
+    cuckooJedis.zadd(bfoo, 0.1d, bc);
+    cuckooJedis.zadd(bfoo, 2d, ba);
 
-    long bresult = jedis.zremrangeByScore(bfoo, 0, 2);
+    long bresult = cuckooJedis.zremrangeByScore(bfoo, 0, 2);
 
     assertEquals(2, bresult);
 
     Set<byte[]> bexpected = new LinkedHashSet<byte[]>();
     bexpected.add(bb);
 
-    assertByteArraySetEquals(bexpected, jedis.zrange(bfoo, 0, 100));
+    assertByteArraySetEquals(bexpected, cuckooJedis.zrange(bfoo, 0, 100));
   }
 
   @Test
   public void zremrangeByLex() {
-    jedis.zadd("foo", 1, "a");
-    jedis.zadd("foo", 1, "b");
-    jedis.zadd("foo", 1, "c");
-    jedis.zadd("foo", 1, "aa");
+    cuckooJedis.zadd("foo", 1, "a");
+    cuckooJedis.zadd("foo", 1, "b");
+    cuckooJedis.zadd("foo", 1, "c");
+    cuckooJedis.zadd("foo", 1, "aa");
 
-    long result = jedis.zremrangeByLex("foo", "[aa", "(c");
+    long result = cuckooJedis.zremrangeByLex("foo", "[aa", "(c");
 
     assertEquals(2, result);
 
@@ -954,16 +954,16 @@ public class SortedSetCommandsTest extends JedisCommandTestBase {
     expected.add("a");
     expected.add("c");
 
-    assertEquals(expected, jedis.zrangeByLex("foo", "-", "+"));
+    assertEquals(expected, cuckooJedis.zrangeByLex("foo", "-", "+"));
   }
 
   @Test
   public void zremrangeByLexBinary() {
-    jedis.zadd(bfoo, 1, ba);
-    jedis.zadd(bfoo, 1, bc);
-    jedis.zadd(bfoo, 1, bb);
+    cuckooJedis.zadd(bfoo, 1, ba);
+    cuckooJedis.zadd(bfoo, 1, bc);
+    cuckooJedis.zadd(bfoo, 1, bb);
 
-    long bresult = jedis.zremrangeByLex(bfoo, bInclusiveB, bExclusiveC);
+    long bresult = cuckooJedis.zremrangeByLex(bfoo, bInclusiveB, bExclusiveC);
 
     assertEquals(1, bresult);
 
@@ -971,17 +971,17 @@ public class SortedSetCommandsTest extends JedisCommandTestBase {
     bexpected.add(ba);
     bexpected.add(bc);
 
-    assertByteArraySetEquals(bexpected, jedis.zrangeByLex(bfoo, bLexMinusInf, bLexPlusInf));
+    assertByteArraySetEquals(bexpected, cuckooJedis.zrangeByLex(bfoo, bLexMinusInf, bLexPlusInf));
   }
 
   @Test
   public void zunionstore() {
-    jedis.zadd("foo", 1, "a");
-    jedis.zadd("foo", 2, "b");
-    jedis.zadd("bar", 2, "a");
-    jedis.zadd("bar", 2, "b");
+    cuckooJedis.zadd("foo", 1, "a");
+    cuckooJedis.zadd("foo", 2, "b");
+    cuckooJedis.zadd("bar", 2, "a");
+    cuckooJedis.zadd("bar", 2, "b");
 
-    long result = jedis.zunionstore("dst", "foo", "bar");
+    long result = cuckooJedis.zunionstore("dst", "foo", "bar");
 
     assertEquals(2, result);
 
@@ -989,15 +989,15 @@ public class SortedSetCommandsTest extends JedisCommandTestBase {
     expected.add(new Tuple("b", new Double(4)));
     expected.add(new Tuple("a", new Double(3)));
 
-    assertEquals(expected, jedis.zrangeWithScores("dst", 0, 100));
+    assertEquals(expected, cuckooJedis.zrangeWithScores("dst", 0, 100));
 
     // Binary
-    jedis.zadd(bfoo, 1, ba);
-    jedis.zadd(bfoo, 2, bb);
-    jedis.zadd(bbar, 2, ba);
-    jedis.zadd(bbar, 2, bb);
+    cuckooJedis.zadd(bfoo, 1, ba);
+    cuckooJedis.zadd(bfoo, 2, bb);
+    cuckooJedis.zadd(bbar, 2, ba);
+    cuckooJedis.zadd(bbar, 2, bb);
 
-    long bresult = jedis.zunionstore(SafeEncoder.encode("dst"), bfoo, bbar);
+    long bresult = cuckooJedis.zunionstore(SafeEncoder.encode("dst"), bfoo, bbar);
 
     assertEquals(2, bresult);
 
@@ -1005,20 +1005,20 @@ public class SortedSetCommandsTest extends JedisCommandTestBase {
     bexpected.add(new Tuple(bb, new Double(4)));
     bexpected.add(new Tuple(ba, new Double(3)));
 
-    assertEquals(bexpected, jedis.zrangeWithScores(SafeEncoder.encode("dst"), 0, 100));
+    assertEquals(bexpected, cuckooJedis.zrangeWithScores(SafeEncoder.encode("dst"), 0, 100));
   }
 
   @Test
   public void zunionstoreParams() {
-    jedis.zadd("foo", 1, "a");
-    jedis.zadd("foo", 2, "b");
-    jedis.zadd("bar", 2, "a");
-    jedis.zadd("bar", 2, "b");
+    cuckooJedis.zadd("foo", 1, "a");
+    cuckooJedis.zadd("foo", 2, "b");
+    cuckooJedis.zadd("bar", 2, "a");
+    cuckooJedis.zadd("bar", 2, "b");
 
     ZParams params = new ZParams();
     params.weights(2, 2.5);
     params.aggregate(ZParams.Aggregate.SUM);
-    long result = jedis.zunionstore("dst", params, "foo", "bar");
+    long result = cuckooJedis.zunionstore("dst", params, "foo", "bar");
 
     assertEquals(2, result);
 
@@ -1026,18 +1026,18 @@ public class SortedSetCommandsTest extends JedisCommandTestBase {
     expected.add(new Tuple("b", new Double(9)));
     expected.add(new Tuple("a", new Double(7)));
 
-    assertEquals(expected, jedis.zrangeWithScores("dst", 0, 100));
+    assertEquals(expected, cuckooJedis.zrangeWithScores("dst", 0, 100));
 
     // Binary
-    jedis.zadd(bfoo, 1, ba);
-    jedis.zadd(bfoo, 2, bb);
-    jedis.zadd(bbar, 2, ba);
-    jedis.zadd(bbar, 2, bb);
+    cuckooJedis.zadd(bfoo, 1, ba);
+    cuckooJedis.zadd(bfoo, 2, bb);
+    cuckooJedis.zadd(bbar, 2, ba);
+    cuckooJedis.zadd(bbar, 2, bb);
 
     ZParams bparams = new ZParams();
     bparams.weights(2, 2.5);
     bparams.aggregate(ZParams.Aggregate.SUM);
-    long bresult = jedis.zunionstore(SafeEncoder.encode("dst"), bparams, bfoo, bbar);
+    long bresult = cuckooJedis.zunionstore(SafeEncoder.encode("dst"), bparams, bfoo, bbar);
 
     assertEquals(2, bresult);
 
@@ -1045,90 +1045,90 @@ public class SortedSetCommandsTest extends JedisCommandTestBase {
     bexpected.add(new Tuple(bb, new Double(9)));
     bexpected.add(new Tuple(ba, new Double(7)));
 
-    assertEquals(bexpected, jedis.zrangeWithScores(SafeEncoder.encode("dst"), 0, 100));
+    assertEquals(bexpected, cuckooJedis.zrangeWithScores(SafeEncoder.encode("dst"), 0, 100));
   }
 
   @Test
   public void zinterstore() {
-    jedis.zadd("foo", 1, "a");
-    jedis.zadd("foo", 2, "b");
-    jedis.zadd("bar", 2, "a");
+    cuckooJedis.zadd("foo", 1, "a");
+    cuckooJedis.zadd("foo", 2, "b");
+    cuckooJedis.zadd("bar", 2, "a");
 
-    long result = jedis.zinterstore("dst", "foo", "bar");
+    long result = cuckooJedis.zinterstore("dst", "foo", "bar");
 
     assertEquals(1, result);
 
     Set<Tuple> expected = new LinkedHashSet<Tuple>();
     expected.add(new Tuple("a", new Double(3)));
 
-    assertEquals(expected, jedis.zrangeWithScores("dst", 0, 100));
+    assertEquals(expected, cuckooJedis.zrangeWithScores("dst", 0, 100));
 
     // Binary
-    jedis.zadd(bfoo, 1, ba);
-    jedis.zadd(bfoo, 2, bb);
-    jedis.zadd(bbar, 2, ba);
+    cuckooJedis.zadd(bfoo, 1, ba);
+    cuckooJedis.zadd(bfoo, 2, bb);
+    cuckooJedis.zadd(bbar, 2, ba);
 
-    long bresult = jedis.zinterstore(SafeEncoder.encode("dst"), bfoo, bbar);
+    long bresult = cuckooJedis.zinterstore(SafeEncoder.encode("dst"), bfoo, bbar);
 
     assertEquals(1, bresult);
 
     Set<Tuple> bexpected = new LinkedHashSet<Tuple>();
     bexpected.add(new Tuple(ba, new Double(3)));
 
-    assertEquals(bexpected, jedis.zrangeWithScores(SafeEncoder.encode("dst"), 0, 100));
+    assertEquals(bexpected, cuckooJedis.zrangeWithScores(SafeEncoder.encode("dst"), 0, 100));
   }
 
   @Test
   public void zintertoreParams() {
-    jedis.zadd("foo", 1, "a");
-    jedis.zadd("foo", 2, "b");
-    jedis.zadd("bar", 2, "a");
+    cuckooJedis.zadd("foo", 1, "a");
+    cuckooJedis.zadd("foo", 2, "b");
+    cuckooJedis.zadd("bar", 2, "a");
 
     ZParams params = new ZParams();
     params.weights(2, 2.5);
     params.aggregate(ZParams.Aggregate.SUM);
-    long result = jedis.zinterstore("dst", params, "foo", "bar");
+    long result = cuckooJedis.zinterstore("dst", params, "foo", "bar");
 
     assertEquals(1, result);
 
     Set<Tuple> expected = new LinkedHashSet<Tuple>();
     expected.add(new Tuple("a", new Double(7)));
 
-    assertEquals(expected, jedis.zrangeWithScores("dst", 0, 100));
+    assertEquals(expected, cuckooJedis.zrangeWithScores("dst", 0, 100));
 
     // Binary
-    jedis.zadd(bfoo, 1, ba);
-    jedis.zadd(bfoo, 2, bb);
-    jedis.zadd(bbar, 2, ba);
+    cuckooJedis.zadd(bfoo, 1, ba);
+    cuckooJedis.zadd(bfoo, 2, bb);
+    cuckooJedis.zadd(bbar, 2, ba);
 
     ZParams bparams = new ZParams();
     bparams.weights(2, 2.5);
     bparams.aggregate(ZParams.Aggregate.SUM);
-    long bresult = jedis.zinterstore(SafeEncoder.encode("dst"), bparams, bfoo, bbar);
+    long bresult = cuckooJedis.zinterstore(SafeEncoder.encode("dst"), bparams, bfoo, bbar);
 
     assertEquals(1, bresult);
 
     Set<Tuple> bexpected = new LinkedHashSet<Tuple>();
     bexpected.add(new Tuple(ba, new Double(7)));
 
-    assertEquals(bexpected, jedis.zrangeWithScores(SafeEncoder.encode("dst"), 0, 100));
+    assertEquals(bexpected, cuckooJedis.zrangeWithScores(SafeEncoder.encode("dst"), 0, 100));
   }
 
   @Test
   public void zscan() {
-    jedis.zadd("foo", 1, "a");
-    jedis.zadd("foo", 2, "b");
+    cuckooJedis.zadd("foo", 1, "a");
+    cuckooJedis.zadd("foo", 2, "b");
 
-    ScanResult<Tuple> result = jedis.zscan("foo", SCAN_POINTER_START);
+    ScanResult<Tuple> result = cuckooJedis.zscan("foo", SCAN_POINTER_START);
 
     assertEquals(SCAN_POINTER_START, result.getCursor());
     assertFalse(result.getResult().isEmpty());
 
     // binary
-    jedis.zadd(bfoo, 1, ba);
-    jedis.zadd(bfoo, 1, bb);
+    cuckooJedis.zadd(bfoo, 1, ba);
+    cuckooJedis.zadd(bfoo, 1, bb);
 
-    ScanResult<Tuple> bResult = jedis.zscan(bfoo, SCAN_POINTER_START_BINARY);
+    ScanResult<Tuple> bResult = cuckooJedis.zscan(bfoo, SCAN_POINTER_START_BINARY);
 
     assertArrayEquals(SCAN_POINTER_START_BINARY, bResult.getCursorAsBytes());
     assertFalse(bResult.getResult().isEmpty());
@@ -1139,10 +1139,10 @@ public class SortedSetCommandsTest extends JedisCommandTestBase {
     ScanParams params = new ScanParams();
     params.match("a*");
 
-    jedis.zadd("foo", 2, "b");
-    jedis.zadd("foo", 1, "a");
-    jedis.zadd("foo", 11, "aa");
-    ScanResult<Tuple> result = jedis.zscan("foo", SCAN_POINTER_START, params);
+    cuckooJedis.zadd("foo", 2, "b");
+    cuckooJedis.zadd("foo", 1, "a");
+    cuckooJedis.zadd("foo", 11, "aa");
+    ScanResult<Tuple> result = cuckooJedis.zscan("foo", SCAN_POINTER_START, params);
 
     assertEquals(SCAN_POINTER_START, result.getCursor());
     assertFalse(result.getResult().isEmpty());
@@ -1151,10 +1151,10 @@ public class SortedSetCommandsTest extends JedisCommandTestBase {
     params = new ScanParams();
     params.match(bbarstar);
 
-    jedis.zadd(bfoo, 2, bbar1);
-    jedis.zadd(bfoo, 1, bbar2);
-    jedis.zadd(bfoo, 11, bbar3);
-    ScanResult<Tuple> bResult = jedis.zscan(bfoo, SCAN_POINTER_START_BINARY, params);
+    cuckooJedis.zadd(bfoo, 2, bbar1);
+    cuckooJedis.zadd(bfoo, 1, bbar2);
+    cuckooJedis.zadd(bfoo, 11, bbar3);
+    ScanResult<Tuple> bResult = cuckooJedis.zscan(bfoo, SCAN_POINTER_START_BINARY, params);
 
     assertArrayEquals(SCAN_POINTER_START_BINARY, bResult.getCursorAsBytes());
     assertFalse(bResult.getResult().isEmpty());
@@ -1166,13 +1166,13 @@ public class SortedSetCommandsTest extends JedisCommandTestBase {
     ScanParams params = new ScanParams();
     params.count(2);
 
-    jedis.zadd("foo", 1, "a1");
-    jedis.zadd("foo", 2, "a2");
-    jedis.zadd("foo", 3, "a3");
-    jedis.zadd("foo", 4, "a4");
-    jedis.zadd("foo", 5, "a5");
+    cuckooJedis.zadd("foo", 1, "a1");
+    cuckooJedis.zadd("foo", 2, "a2");
+    cuckooJedis.zadd("foo", 3, "a3");
+    cuckooJedis.zadd("foo", 4, "a4");
+    cuckooJedis.zadd("foo", 5, "a5");
 
-    ScanResult<Tuple> result = jedis.zscan("foo", SCAN_POINTER_START, params);
+    ScanResult<Tuple> result = cuckooJedis.zscan("foo", SCAN_POINTER_START, params);
 
     assertFalse(result.getResult().isEmpty());
 
@@ -1180,24 +1180,24 @@ public class SortedSetCommandsTest extends JedisCommandTestBase {
     params = new ScanParams();
     params.count(2);
 
-    jedis.zadd(bfoo, 2, bbar1);
-    jedis.zadd(bfoo, 1, bbar2);
-    jedis.zadd(bfoo, 11, bbar3);
+    cuckooJedis.zadd(bfoo, 2, bbar1);
+    cuckooJedis.zadd(bfoo, 1, bbar2);
+    cuckooJedis.zadd(bfoo, 11, bbar3);
 
-    ScanResult<Tuple> bResult = jedis.zscan(bfoo, SCAN_POINTER_START_BINARY, params);
+    ScanResult<Tuple> bResult = cuckooJedis.zscan(bfoo, SCAN_POINTER_START_BINARY, params);
 
     assertFalse(bResult.getResult().isEmpty());
   }
 
   @Test
   public void infinity() {
-    jedis.zadd("key", Double.POSITIVE_INFINITY, "pos");
-    assertEquals(Double.POSITIVE_INFINITY, jedis.zscore("key", "pos"), 0d);
-    jedis.zadd("key", Double.NEGATIVE_INFINITY, "neg");
-    assertEquals(Double.NEGATIVE_INFINITY, jedis.zscore("key", "neg"), 0d);
-    jedis.zadd("key", 0d, "zero");
+    cuckooJedis.zadd("key", Double.POSITIVE_INFINITY, "pos");
+    assertEquals(Double.POSITIVE_INFINITY, cuckooJedis.zscore("key", "pos"), 0d);
+    cuckooJedis.zadd("key", Double.NEGATIVE_INFINITY, "neg");
+    assertEquals(Double.NEGATIVE_INFINITY, cuckooJedis.zscore("key", "neg"), 0d);
+    cuckooJedis.zadd("key", 0d, "zero");
 
-    Set<Tuple> set = jedis.zrangeWithScores("key", 0, -1);
+    Set<Tuple> set = cuckooJedis.zrangeWithScores("key", 0, -1);
     Iterator<Tuple> itr = set.iterator();
     assertEquals(Double.NEGATIVE_INFINITY, itr.next().getScore(), 0d);
     assertEquals(0d, itr.next().getScore(), 0d);

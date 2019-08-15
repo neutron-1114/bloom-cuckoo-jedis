@@ -30,96 +30,96 @@ import redis.clients.jedis.params.ZIncrByParams;
 import redis.clients.jedis.util.SafeEncoder;
 import redis.clients.jedis.util.Slowlog;
 
-public class Jedis extends BinaryJedis implements JedisCommands, MultiKeyCommands,
+public class CuckooJedis extends BinaryJedis implements JedisCommands, MultiKeyCommands,
     AdvancedJedisCommands, ScriptingCommands, BasicCommands, ClusterCommands, SentinelCommands, ModuleCommands {
 
   protected JedisPoolAbstract dataSource = null;
 
-  public Jedis() {
+  public CuckooJedis() {
     super();
   }
 
-  public Jedis(final String host) {
+  public CuckooJedis(final String host) {
     super(host);
   }
 
-  public Jedis(final HostAndPort hp) {
+  public CuckooJedis(final HostAndPort hp) {
     super(hp);
   }
 
-  public Jedis(final String host, final int port) {
+  public CuckooJedis(final String host, final int port) {
     super(host, port);
   }
 
-  public Jedis(final String host, final int port, final boolean ssl) {
+  public CuckooJedis(final String host, final int port, final boolean ssl) {
     super(host, port, ssl);
   }
 
-  public Jedis(final String host, final int port, final boolean ssl,
-      final SSLSocketFactory sslSocketFactory, final SSLParameters sslParameters,
-      final HostnameVerifier hostnameVerifier) {
+  public CuckooJedis(final String host, final int port, final boolean ssl,
+                     final SSLSocketFactory sslSocketFactory, final SSLParameters sslParameters,
+                     final HostnameVerifier hostnameVerifier) {
     super(host, port, ssl, sslSocketFactory, sslParameters, hostnameVerifier);
   }
 
-  public Jedis(final String host, final int port, final int timeout) {
+  public CuckooJedis(final String host, final int port, final int timeout) {
     super(host, port, timeout);
   }
 
-  public Jedis(final String host, final int port, final int timeout, final boolean ssl) {
+  public CuckooJedis(final String host, final int port, final int timeout, final boolean ssl) {
     super(host, port, timeout, ssl);
   }
 
-  public Jedis(final String host, final int port, final int timeout, final boolean ssl,
-      final SSLSocketFactory sslSocketFactory, final SSLParameters sslParameters,
-      final HostnameVerifier hostnameVerifier) {
+  public CuckooJedis(final String host, final int port, final int timeout, final boolean ssl,
+                     final SSLSocketFactory sslSocketFactory, final SSLParameters sslParameters,
+                     final HostnameVerifier hostnameVerifier) {
     super(host, port, timeout, ssl, sslSocketFactory, sslParameters, hostnameVerifier);
   }
 
-  public Jedis(final String host, final int port, final int connectionTimeout, final int soTimeout) {
+  public CuckooJedis(final String host, final int port, final int connectionTimeout, final int soTimeout) {
     super(host, port, connectionTimeout, soTimeout);
   }
 
-  public Jedis(final String host, final int port, final int connectionTimeout, final int soTimeout,
-      final boolean ssl) {
+  public CuckooJedis(final String host, final int port, final int connectionTimeout, final int soTimeout,
+                     final boolean ssl) {
     super(host, port, connectionTimeout, soTimeout, ssl);
   }
 
-  public Jedis(final String host, final int port, final int connectionTimeout, final int soTimeout,
-      final boolean ssl, final SSLSocketFactory sslSocketFactory, final SSLParameters sslParameters,
-      final HostnameVerifier hostnameVerifier) {
+  public CuckooJedis(final String host, final int port, final int connectionTimeout, final int soTimeout,
+                     final boolean ssl, final SSLSocketFactory sslSocketFactory, final SSLParameters sslParameters,
+                     final HostnameVerifier hostnameVerifier) {
     super(host, port, connectionTimeout, soTimeout, ssl, sslSocketFactory, sslParameters,
         hostnameVerifier);
   }
 
-  public Jedis(JedisShardInfo shardInfo) {
+  public CuckooJedis(JedisShardInfo shardInfo) {
     super(shardInfo);
   }
 
-  public Jedis(URI uri) {
+  public CuckooJedis(URI uri) {
     super(uri);
   }
 
-  public Jedis(URI uri, final SSLSocketFactory sslSocketFactory, final SSLParameters sslParameters,
-      final HostnameVerifier hostnameVerifier) {
+  public CuckooJedis(URI uri, final SSLSocketFactory sslSocketFactory, final SSLParameters sslParameters,
+                     final HostnameVerifier hostnameVerifier) {
     super(uri, sslSocketFactory, sslParameters, hostnameVerifier);
   }
 
-  public Jedis(final URI uri, final int timeout) {
+  public CuckooJedis(final URI uri, final int timeout) {
     super(uri, timeout);
   }
 
-  public Jedis(final URI uri, final int timeout, final SSLSocketFactory sslSocketFactory,
-      final SSLParameters sslParameters, final HostnameVerifier hostnameVerifier) {
+  public CuckooJedis(final URI uri, final int timeout, final SSLSocketFactory sslSocketFactory,
+                     final SSLParameters sslParameters, final HostnameVerifier hostnameVerifier) {
     super(uri, timeout, sslSocketFactory, sslParameters, hostnameVerifier);
   }
 
-  public Jedis(final URI uri, final int connectionTimeout, final int soTimeout) {
+  public CuckooJedis(final URI uri, final int connectionTimeout, final int soTimeout) {
     super(uri, connectionTimeout, soTimeout);
   }
 
-  public Jedis(final URI uri, final int connectionTimeout, final int soTimeout,
-      final SSLSocketFactory sslSocketFactory, final SSLParameters sslParameters,
-      final HostnameVerifier hostnameVerifier) {
+  public CuckooJedis(final URI uri, final int connectionTimeout, final int soTimeout,
+                     final SSLSocketFactory sslSocketFactory, final SSLParameters sslParameters,
+                     final HostnameVerifier hostnameVerifier) {
     super(uri, connectionTimeout, soTimeout, sslSocketFactory, sslParameters, hostnameVerifier);
   }
 
@@ -3836,125 +3836,152 @@ public class Jedis extends BinaryJedis implements JedisCommands, MultiKeyCommand
   }
 
   //tongzi modifiy
-  public String cf_reverse(final String key, final Long capacity) {
+  public String cfreverse(final String key, final Long capacity) {
     checkIsInMultiOrPipeline();
-    client.cf_reserve(key, String.valueOf(capacity));
+    client.cfreserve(key, String.valueOf(capacity));
     return client.getStatusCodeReply();
   }
 
-  public Long cf_add(final String key, final String value) {
+  public Long cfadd(final String key, final String value) {
     checkIsInMultiOrPipeline();
-    client.cf_add(key, value);
+    client.cfadd(key, value);
     return client.getIntegerReply();
   }
 
-  public Long cf_addnx(final String key, final String value) {
+  public Long cfaddnx(final String key, final String value) {
     checkIsInMultiOrPipeline();
-    client.cf_addnx(key, value);
+    client.cfaddnx(key, value);
     return client.getIntegerReply();
   }
 
-  public List<Long> cf_insert(final String key, final Long capacity, final String... value) {
+  public List<Long> cfinsert(final String key, final Long capacity, final String... value) {
     checkIsInMultiOrPipeline();
     String[] vars = new String[value.length + 3];
-    System.arraycopy(value, 0, vars, 3, key.length());
+    System.arraycopy(value, 0, vars, 3, value.length);
     vars[0] = "CAPACITY";
     vars[1] = String.valueOf(capacity);
     vars[2] = "ITEMS";
-    client.cf_insert(key, vars);
+    client.cfinsert(key, vars);
     return client.getIntegerMultiBulkReply();
   }
 
-  public List<Long> cf_insert_nocreate(final String key, final String... value) {
+  public List<Long> cfinsertnocreate(final String key, final String... value) {
     checkIsInMultiOrPipeline();
     String[] vars = new String[value.length + 2];
-    System.arraycopy(value, 0, vars, 2, key.length());
+    System.arraycopy(value, 0, vars, 2, value.length);
     vars[0] = "NOCREATE";
     vars[1] = "ITEMS";
-    client.cf_insert(key, vars);
+    client.cfinsert(key, vars);
     return client.getIntegerMultiBulkReply();
   }
 
-  public List<Long> cf_insert(final String key, final String... value) {
+  public List<Long> cfinsert(final String key, final String... value) {
     checkIsInMultiOrPipeline();
     String[] vars = new String[value.length + 1];
-    System.arraycopy(value, 0, vars, 1, key.length());
+    System.arraycopy(value, 0, vars, 1, value.length);
     vars[0] = "ITEMS";
-    client.cf_insert(key, vars);
+    client.cfinsert(key, vars);
     return client.getIntegerMultiBulkReply();
   }
 
-  public List<Long> cf_insertnx(final String key, final Long capacity, final String... value) {
+  public List<Long> cfinsertnx(final String key, final Long capacity, final String... value) {
     checkIsInMultiOrPipeline();
     String[] vars = new String[value.length + 3];
-    System.arraycopy(value, 0, vars, 3, key.length());
+    System.arraycopy(value, 0, vars, 3, value.length);
     vars[0] = "CAPACITY";
     vars[1] = String.valueOf(capacity);
     vars[2] = "ITEMS";
-    client.cf_insertnx(key, vars);
+    client.cfinsertnx(key, vars);
     return client.getIntegerMultiBulkReply();
   }
 
-  public List<Long> cf_insertnx_nocreate(final String key, final String... value) {
+  public List<Long> cfinsertnxnocreate(final String key, final String... value) {
     checkIsInMultiOrPipeline();
     String[] vars = new String[value.length + 2];
-    System.arraycopy(value, 0, vars, 2, key.length());
+    System.arraycopy(value, 0, vars, 2, value.length);
     vars[0] = "NOCREATE";
     vars[1] = "ITEMS";
-    client.cf_insertnx(key, vars);
+    client.cfinsertnx(key, vars);
     return client.getIntegerMultiBulkReply();
   }
 
-  public List<Long> cf_insertnx(final String key, final String... value) {
+  public List<Long> cfinsertnx(final String key, final String... value) {
     checkIsInMultiOrPipeline();
     String[] vars = new String[value.length + 1];
-    System.arraycopy(value, 0, vars, 1, key.length());
+    System.arraycopy(value, 0, vars, 1, value.length);
     vars[0] = "ITEMS";
-    client.cf_insertnx(key, vars);
+    client.cfinsertnx(key, vars);
     return client.getIntegerMultiBulkReply();
   }
 
-  public Long cf_exists(final String key, final String value) {
+  public Long cfexists(final String key, final String value) {
     checkIsInMultiOrPipeline();
-    client.cf_exists(key, value);
+    client.cfexists(key, value);
     return client.getIntegerReply();
   }
 
-  public List<Long> cf_mexists(final String key, final String... value) {
+  public List<Long> cfmexists(final String key, final String... value) {
     checkIsInMultiOrPipeline();
-    client.cf_mexists(key, value);
+    client.cfmexists(key, value);
     return client.getIntegerMultiBulkReply();
   }
 
-  public Long cf_del(final String key, final String value) {
+  public Long cfdel(final String key, final String value) {
     checkIsInMultiOrPipeline();
-    client.cf_del(key, value);
+    client.cfdel(key, value);
     return client.getIntegerReply();
   }
 
-  public Long cf_count(final String key, final String value) {
+  public Long cfcount(final String key, final String value) {
     checkIsInMultiOrPipeline();
-    client.cf_count(key, value);
+    client.cfcount(key, value);
     return client.getIntegerReply();
   }
 
-  public ScanResult cf_scandump(final String key, final String cursor) {
-    checkIsInMultiOrPipeline();
-    client.cf_scandump(key, cursor);
-    List<Object> result = client.getObjectMultiBulkReply();
-    String newcursor = new String((byte[]) result.get(0));
-    List<String> results = new ArrayList<String>();
-    List<byte[]> rawResults = (List<byte[]>) result.get(1);
-    for (byte[] bs : rawResults) {
-      results.add(SafeEncoder.encode(bs));
+  public class DumpObject {
+    private String cursor;
+    private byte[] data;
+
+    public DumpObject(String cursor, byte[] data) {
+      this.cursor = cursor;
+      this.data = data;
     }
-    return new ScanResult<String>(newcursor, results);
+
+    public String getCursor() {
+      return cursor;
+    }
+
+    public void setCursor(String cursor) {
+      this.cursor = cursor;
+    }
+
+    public byte[] getData() {
+      return data;
+    }
+
+    public void setData(byte[] data) {
+      this.data = data;
+    }
   }
 
-  public String cf_loadchunk(final String key, final String cursor, final String data) {
+  public DumpObject cfscandump(final String key, final String cursor) {
     checkIsInMultiOrPipeline();
-    client.cf_loadchunk(key, cursor, data);
+    client.cfscandump(key, cursor);
+    List<Object> result = client.getObjectMultiBulkReply();
+    String newcursor = String.valueOf((long)result.get(0));
+    byte[] rawResults = (byte[]) result.get(1);
+    if(rawResults == null && newcursor.equals("0")) {
+      return new DumpObject("0", null);
+    }
+    return new DumpObject(newcursor, rawResults);
+  }
+
+  public String cfloadchunk(final String key, final String cursor, final byte[] data) {
+    checkIsInMultiOrPipeline();
+    byte[][] bytes = {SafeEncoder.encode(cursor), data};
+    client.cfloadchunk(key, bytes);
     return client.getStatusCodeReply();
   }
+
 
 }

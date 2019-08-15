@@ -2,17 +2,17 @@ package redis.clients.jedis.tests.utils;
 
 import java.util.concurrent.atomic.AtomicReference;
 
+import redis.clients.jedis.CuckooJedis;
 import redis.clients.jedis.HostAndPort;
-import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPubSub;
 
 public class JedisSentinelTestUtil {
   public static HostAndPort waitForNewPromotedMaster(final String masterName,
-      final Jedis sentinelJedis, final Jedis commandJedis) throws InterruptedException {
+                                                     final CuckooJedis sentinelCuckooJedis, final CuckooJedis commandCuckooJedis) throws InterruptedException {
 
     final AtomicReference<String> newmaster = new AtomicReference<String>("");
 
-    sentinelJedis.psubscribe(new JedisPubSub() {
+    sentinelCuckooJedis.psubscribe(new JedisPubSub() {
 
       @Override
       public void onPMessage(String pattern, String channel, String message) {
@@ -28,7 +28,7 @@ public class JedisSentinelTestUtil {
 
       @Override
       public void onPSubscribe(String pattern, int subscribedChannels) {
-        commandJedis.sentinelFailover(masterName);
+        commandCuckooJedis.sentinelFailover(masterName);
       }
     }, "*");
 

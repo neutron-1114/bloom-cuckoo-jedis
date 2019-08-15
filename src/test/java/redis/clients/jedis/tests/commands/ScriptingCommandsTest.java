@@ -16,14 +16,14 @@ import org.hamcrest.Matcher;
 import org.junit.Test;
 
 import redis.clients.jedis.BinaryJedis;
-import redis.clients.jedis.Jedis;
+import redis.clients.jedis.CuckooJedis;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 import redis.clients.jedis.exceptions.JedisDataException;
 import redis.clients.jedis.exceptions.JedisNoScriptException;
 import redis.clients.jedis.tests.utils.ClientKillerUtil;
 import redis.clients.jedis.util.SafeEncoder;
 
-public class ScriptingCommandsTest extends JedisCommandTestBase {
+public class ScriptingCommandsTest extends CuckooJedisCommandTestBase {
 
   @SuppressWarnings("unchecked")
   @Test
@@ -38,7 +38,7 @@ public class ScriptingCommandsTest extends JedisCommandTestBase {
     args.add("second");
     args.add("third");
 
-    List<String> response = (List<String>) jedis.eval(script, keys, args);
+    List<String> response = (List<String>) cuckooJedis.eval(script, keys, args);
 
     assertEquals(5, response.size());
     assertEquals("key1", response.get(0));
@@ -85,7 +85,7 @@ public class ScriptingCommandsTest extends JedisCommandTestBase {
     List<String> args = new ArrayList<String>();
     args.add("first");
 
-    String response = (String) jedis.eval(script, keys, args);
+    String response = (String) cuckooJedis.eval(script, keys, args);
 
     assertEquals("key1", response);
   }
@@ -96,7 +96,7 @@ public class ScriptingCommandsTest extends JedisCommandTestBase {
     List<String> keys = new ArrayList<String>();
     keys.add("key1");
 
-    Long response = (Long) jedis.eval(script, keys, new ArrayList<String>());
+    Long response = (Long) cuckooJedis.eval(script, keys, new ArrayList<String>());
 
     assertEquals(new Long(2), response);
   }
@@ -104,7 +104,7 @@ public class ScriptingCommandsTest extends JedisCommandTestBase {
   @Test
   public void evalNestedLists() {
     String script = "return { {KEYS[1]} , {2} }";
-    List<?> results = (List<?>) jedis.eval(script, 1, "key1");
+    List<?> results = (List<?>) cuckooJedis.eval(script, 1, "key1");
 
     assertThat((List<String>) results.get(0), listWithItem("key1"));
     assertThat((List<Long>) results.get(1), listWithItem(2L));
@@ -115,46 +115,46 @@ public class ScriptingCommandsTest extends JedisCommandTestBase {
     String script = "return KEYS[1]";
     List<String> keys = new ArrayList<String>();
     keys.add("key1");
-    String response = (String) jedis.eval(script, keys, new ArrayList<String>());
+    String response = (String) cuckooJedis.eval(script, keys, new ArrayList<String>());
 
     assertEquals("key1", response);
   }
 
   @Test
   public void evalsha() {
-    jedis.set("foo", "bar");
-    jedis.eval("return redis.call('get','foo')");
-    String result = (String) jedis.evalsha("6b1bf486c81ceb7edf3c093f4c48582e38c0e791");
+    cuckooJedis.set("foo", "bar");
+    cuckooJedis.eval("return redis.call('get','foo')");
+    String result = (String) cuckooJedis.evalsha("6b1bf486c81ceb7edf3c093f4c48582e38c0e791");
 
     assertEquals("bar", result);
   }
 
   @Test
   public void evalshaBinary() {
-    jedis.set(SafeEncoder.encode("foo"), SafeEncoder.encode("bar"));
-    jedis.eval(SafeEncoder.encode("return redis.call('get','foo')"));
-    byte[] result = (byte[]) jedis.evalsha(SafeEncoder.encode("6b1bf486c81ceb7edf3c093f4c48582e38c0e791"));
+    cuckooJedis.set(SafeEncoder.encode("foo"), SafeEncoder.encode("bar"));
+    cuckooJedis.eval(SafeEncoder.encode("return redis.call('get','foo')"));
+    byte[] result = (byte[]) cuckooJedis.evalsha(SafeEncoder.encode("6b1bf486c81ceb7edf3c093f4c48582e38c0e791"));
 
     assertArrayEquals(SafeEncoder.encode("bar"), result);
   }
 
   @Test(expected = JedisNoScriptException.class)
   public void evalshaShaNotFound() {
-    jedis.evalsha("ffffffffffffffffffffffffffffffffffffffff");
+    cuckooJedis.evalsha("ffffffffffffffffffffffffffffffffffffffff");
   }
 
   @Test
   public void scriptFlush() {
-    jedis.set("foo", "bar");
-    jedis.eval("return redis.call('get','foo')");
-    jedis.scriptFlush();
-    assertFalse(jedis.scriptExists("6b1bf486c81ceb7edf3c093f4c48582e38c0e791"));
+    cuckooJedis.set("foo", "bar");
+    cuckooJedis.eval("return redis.call('get','foo')");
+    cuckooJedis.scriptFlush();
+    assertFalse(cuckooJedis.scriptExists("6b1bf486c81ceb7edf3c093f4c48582e38c0e791"));
   }
 
   @Test
   public void scriptExists() {
-    jedis.scriptLoad("return redis.call('get','foo')");
-    List<Boolean> exists = jedis.scriptExists("ffffffffffffffffffffffffffffffffffffffff",
+    cuckooJedis.scriptLoad("return redis.call('get','foo')");
+    List<Boolean> exists = cuckooJedis.scriptExists("ffffffffffffffffffffffffffffffffffffffff",
       "6b1bf486c81ceb7edf3c093f4c48582e38c0e791");
     assertFalse(exists.get(0));
     assertTrue(exists.get(1));
@@ -162,8 +162,8 @@ public class ScriptingCommandsTest extends JedisCommandTestBase {
 
   @Test
   public void scriptExistsBinary() {
-    jedis.scriptLoad(SafeEncoder.encode("return redis.call('get','foo')"));
-    List<Long> exists = jedis.scriptExists(
+    cuckooJedis.scriptLoad(SafeEncoder.encode("return redis.call('get','foo')"));
+    List<Long> exists = cuckooJedis.scriptExists(
       SafeEncoder.encode("ffffffffffffffffffffffffffffffffffffffff"),
       SafeEncoder.encode("6b1bf486c81ceb7edf3c093f4c48582e38c0e791"));
     assertEquals(new Long(0), exists.get(0));
@@ -172,14 +172,14 @@ public class ScriptingCommandsTest extends JedisCommandTestBase {
 
   @Test
   public void scriptLoad() {
-    jedis.scriptLoad("return redis.call('get','foo')");
-    assertTrue(jedis.scriptExists("6b1bf486c81ceb7edf3c093f4c48582e38c0e791"));
+    cuckooJedis.scriptLoad("return redis.call('get','foo')");
+    assertTrue(cuckooJedis.scriptExists("6b1bf486c81ceb7edf3c093f4c48582e38c0e791"));
   }
 
   @Test
   public void scriptLoadBinary() {
-    jedis.scriptLoad(SafeEncoder.encode("return redis.call('get','foo')"));
-    Long exists = jedis
+    cuckooJedis.scriptLoad(SafeEncoder.encode("return redis.call('get','foo')"));
+    Long exists = cuckooJedis
         .scriptExists(SafeEncoder.encode("6b1bf486c81ceb7edf3c093f4c48582e38c0e791"));
     assertEquals((Long) 1L, exists);
   }
@@ -187,7 +187,7 @@ public class ScriptingCommandsTest extends JedisCommandTestBase {
   @Test
   public void scriptKill() {
     try {
-      jedis.scriptKill();
+      cuckooJedis.scriptKill();
     } catch (JedisDataException e) {
       assertTrue(e.getMessage().contains("No scripts in execution right now."));
     }
@@ -195,11 +195,11 @@ public class ScriptingCommandsTest extends JedisCommandTestBase {
 
   @Test
   public void scriptEvalReturnNullValues() {
-    jedis.del("key1");
-    jedis.del("key2");
+    cuckooJedis.del("key1");
+    cuckooJedis.del("key2");
 
     String script = "return {redis.call('hget',KEYS[1],ARGV[1]),redis.call('hget',KEYS[2],ARGV[2])}";
-    List<String> results = (List<String>) jedis.eval(script, 2, "key1", "key2", "1", "2");
+    List<String> results = (List<String>) cuckooJedis.eval(script, 2, "key1", "key2", "1", "2");
     assertEquals(2, results.size());
     assertNull(results.get(0));
     assertNull(results.get(1));
@@ -207,12 +207,12 @@ public class ScriptingCommandsTest extends JedisCommandTestBase {
 
   @Test
   public void scriptEvalShaReturnNullValues() {
-    jedis.del("key1");
-    jedis.del("key2");
+    cuckooJedis.del("key1");
+    cuckooJedis.del("key2");
 
     String script = "return {redis.call('hget',KEYS[1],ARGV[1]),redis.call('hget',KEYS[2],ARGV[2])}";
-    String sha = jedis.scriptLoad(script);
-    List<String> results = (List<String>) jedis.evalsha(sha, 2, "key1", "key2", "1", "2");
+    String sha = cuckooJedis.scriptLoad(script);
+    List<String> results = (List<String>) cuckooJedis.evalsha(sha, 2, "key1", "key2", "1", "2");
     assertEquals(2, results.size());
     assertNull(results.get(0));
     assertNull(results.get(1));
@@ -220,7 +220,7 @@ public class ScriptingCommandsTest extends JedisCommandTestBase {
 
   @Test
   public void scriptExistsWithBrokenConnection() {
-    Jedis deadClient = new Jedis(jedis.getClient().getHost(), jedis.getClient().getPort());
+    CuckooJedis deadClient = new CuckooJedis(cuckooJedis.getClient().getHost(), cuckooJedis.getClient().getPort());
     deadClient.auth("foobared");
 
     deadClient.clientSetname("DEAD");

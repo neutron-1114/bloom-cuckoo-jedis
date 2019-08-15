@@ -14,11 +14,11 @@ import java.util.List;
 
 import org.junit.Test;
 
-import redis.clients.jedis.Jedis;
+import redis.clients.jedis.CuckooJedis;
 import redis.clients.jedis.ListPosition;
 import redis.clients.jedis.exceptions.JedisDataException;
 
-public class ListCommandsTest extends JedisCommandTestBase {
+public class ListCommandsTest extends CuckooJedisCommandTestBase {
   final byte[] bfoo = { 0x01, 0x02, 0x03, 0x04 };
   final byte[] bbar = { 0x05, 0x06, 0x07, 0x08 };
   final byte[] bcar = { 0x09, 0x0A, 0x0B, 0x0C };
@@ -34,70 +34,70 @@ public class ListCommandsTest extends JedisCommandTestBase {
 
   @Test
   public void rpush() {
-    long size = jedis.rpush("foo", "bar");
+    long size = cuckooJedis.rpush("foo", "bar");
     assertEquals(1, size);
-    size = jedis.rpush("foo", "foo");
+    size = cuckooJedis.rpush("foo", "foo");
     assertEquals(2, size);
-    size = jedis.rpush("foo", "bar", "foo");
+    size = cuckooJedis.rpush("foo", "bar", "foo");
     assertEquals(4, size);
 
     // Binary
-    long bsize = jedis.rpush(bfoo, bbar);
+    long bsize = cuckooJedis.rpush(bfoo, bbar);
     assertEquals(1, bsize);
-    bsize = jedis.rpush(bfoo, bfoo);
+    bsize = cuckooJedis.rpush(bfoo, bfoo);
     assertEquals(2, bsize);
-    bsize = jedis.rpush(bfoo, bbar, bfoo);
+    bsize = cuckooJedis.rpush(bfoo, bbar, bfoo);
     assertEquals(4, bsize);
 
   }
 
   @Test
   public void lpush() {
-    long size = jedis.lpush("foo", "bar");
+    long size = cuckooJedis.lpush("foo", "bar");
     assertEquals(1, size);
-    size = jedis.lpush("foo", "foo");
+    size = cuckooJedis.lpush("foo", "foo");
     assertEquals(2, size);
-    size = jedis.lpush("foo", "bar", "foo");
+    size = cuckooJedis.lpush("foo", "bar", "foo");
     assertEquals(4, size);
 
     // Binary
-    long bsize = jedis.lpush(bfoo, bbar);
+    long bsize = cuckooJedis.lpush(bfoo, bbar);
     assertEquals(1, bsize);
-    bsize = jedis.lpush(bfoo, bfoo);
+    bsize = cuckooJedis.lpush(bfoo, bfoo);
     assertEquals(2, bsize);
-    bsize = jedis.lpush(bfoo, bbar, bfoo);
+    bsize = cuckooJedis.lpush(bfoo, bbar, bfoo);
     assertEquals(4, bsize);
 
   }
 
   @Test
   public void llen() {
-    assertEquals(0, jedis.llen("foo").intValue());
-    jedis.lpush("foo", "bar");
-    jedis.lpush("foo", "car");
-    assertEquals(2, jedis.llen("foo").intValue());
+    assertEquals(0, cuckooJedis.llen("foo").intValue());
+    cuckooJedis.lpush("foo", "bar");
+    cuckooJedis.lpush("foo", "car");
+    assertEquals(2, cuckooJedis.llen("foo").intValue());
 
     // Binary
-    assertEquals(0, jedis.llen(bfoo).intValue());
-    jedis.lpush(bfoo, bbar);
-    jedis.lpush(bfoo, bcar);
-    assertEquals(2, jedis.llen(bfoo).intValue());
+    assertEquals(0, cuckooJedis.llen(bfoo).intValue());
+    cuckooJedis.lpush(bfoo, bbar);
+    cuckooJedis.lpush(bfoo, bcar);
+    assertEquals(2, cuckooJedis.llen(bfoo).intValue());
 
   }
 
   @Test
   public void llenNotOnList() {
     try {
-      jedis.set("foo", "bar");
-      jedis.llen("foo");
+      cuckooJedis.set("foo", "bar");
+      cuckooJedis.llen("foo");
       fail("JedisDataException expected");
     } catch (final JedisDataException e) {
     }
 
     // Binary
     try {
-      jedis.set(bfoo, bbar);
-      jedis.llen(bfoo);
+      cuckooJedis.set(bfoo, bbar);
+      cuckooJedis.llen(bfoo);
       fail("JedisDataException expected");
     } catch (final JedisDataException e) {
     }
@@ -106,150 +106,150 @@ public class ListCommandsTest extends JedisCommandTestBase {
 
   @Test
   public void lrange() {
-    jedis.rpush("foo", "a");
-    jedis.rpush("foo", "b");
-    jedis.rpush("foo", "c");
+    cuckooJedis.rpush("foo", "a");
+    cuckooJedis.rpush("foo", "b");
+    cuckooJedis.rpush("foo", "c");
 
     List<String> expected = new ArrayList<String>();
     expected.add("a");
     expected.add("b");
     expected.add("c");
 
-    List<String> range = jedis.lrange("foo", 0, 2);
+    List<String> range = cuckooJedis.lrange("foo", 0, 2);
     assertEquals(expected, range);
 
-    range = jedis.lrange("foo", 0, 20);
+    range = cuckooJedis.lrange("foo", 0, 20);
     assertEquals(expected, range);
 
     expected = new ArrayList<String>();
     expected.add("b");
     expected.add("c");
 
-    range = jedis.lrange("foo", 1, 2);
+    range = cuckooJedis.lrange("foo", 1, 2);
     assertEquals(expected, range);
 
-    assertNull(jedis.lrange("foo", 2, 1));
+    assertNull(cuckooJedis.lrange("foo", 2, 1));
 
     // Binary
-    jedis.rpush(bfoo, bA);
-    jedis.rpush(bfoo, bB);
-    jedis.rpush(bfoo, bC);
+    cuckooJedis.rpush(bfoo, bA);
+    cuckooJedis.rpush(bfoo, bB);
+    cuckooJedis.rpush(bfoo, bC);
 
     List<byte[]> bexpected = new ArrayList<byte[]>();
     bexpected.add(bA);
     bexpected.add(bB);
     bexpected.add(bC);
 
-    List<byte[]> brange = jedis.lrange(bfoo, 0, 2);
+    List<byte[]> brange = cuckooJedis.lrange(bfoo, 0, 2);
     assertByteArrayListEquals(bexpected, brange);
 
-    brange = jedis.lrange(bfoo, 0, 20);
+    brange = cuckooJedis.lrange(bfoo, 0, 20);
     assertByteArrayListEquals(bexpected, brange);
 
     bexpected = new ArrayList<byte[]>();
     bexpected.add(bB);
     bexpected.add(bC);
 
-    brange = jedis.lrange(bfoo, 1, 2);
+    brange = cuckooJedis.lrange(bfoo, 1, 2);
     assertByteArrayListEquals(bexpected, brange);
 
-    assertNull(jedis.lrange(bfoo, 2, 1));
+    assertNull(cuckooJedis.lrange(bfoo, 2, 1));
 
   }
 
   @Test
   public void ltrim() {
-    jedis.lpush("foo", "1");
-    jedis.lpush("foo", "2");
-    jedis.lpush("foo", "3");
-    String status = jedis.ltrim("foo", 0, 1);
+    cuckooJedis.lpush("foo", "1");
+    cuckooJedis.lpush("foo", "2");
+    cuckooJedis.lpush("foo", "3");
+    String status = cuckooJedis.ltrim("foo", 0, 1);
 
     List<String> expected = new ArrayList<String>();
     expected.add("3");
     expected.add("2");
 
     assertEquals("OK", status);
-    assertEquals(2, jedis.llen("foo").intValue());
-    assertEquals(expected, jedis.lrange("foo", 0, 100));
+    assertEquals(2, cuckooJedis.llen("foo").intValue());
+    assertEquals(expected, cuckooJedis.lrange("foo", 0, 100));
 
     // Binary
-    jedis.lpush(bfoo, b1);
-    jedis.lpush(bfoo, b2);
-    jedis.lpush(bfoo, b3);
-    String bstatus = jedis.ltrim(bfoo, 0, 1);
+    cuckooJedis.lpush(bfoo, b1);
+    cuckooJedis.lpush(bfoo, b2);
+    cuckooJedis.lpush(bfoo, b3);
+    String bstatus = cuckooJedis.ltrim(bfoo, 0, 1);
 
     List<byte[]> bexpected = new ArrayList<byte[]>();
     bexpected.add(b3);
     bexpected.add(b2);
 
     assertEquals("OK", bstatus);
-    assertEquals(2, jedis.llen(bfoo).intValue());
-    assertByteArrayListEquals(bexpected, jedis.lrange(bfoo, 0, 100));
+    assertEquals(2, cuckooJedis.llen(bfoo).intValue());
+    assertByteArrayListEquals(bexpected, cuckooJedis.lrange(bfoo, 0, 100));
 
   }
 
   @Test
   public void lset() {
-    jedis.lpush("foo", "1");
-    jedis.lpush("foo", "2");
-    jedis.lpush("foo", "3");
+    cuckooJedis.lpush("foo", "1");
+    cuckooJedis.lpush("foo", "2");
+    cuckooJedis.lpush("foo", "3");
 
     List<String> expected = new ArrayList<String>();
     expected.add("3");
     expected.add("bar");
     expected.add("1");
 
-    String status = jedis.lset("foo", 1, "bar");
+    String status = cuckooJedis.lset("foo", 1, "bar");
 
     assertEquals("OK", status);
-    assertEquals(expected, jedis.lrange("foo", 0, 100));
+    assertEquals(expected, cuckooJedis.lrange("foo", 0, 100));
 
     // Binary
-    jedis.lpush(bfoo, b1);
-    jedis.lpush(bfoo, b2);
-    jedis.lpush(bfoo, b3);
+    cuckooJedis.lpush(bfoo, b1);
+    cuckooJedis.lpush(bfoo, b2);
+    cuckooJedis.lpush(bfoo, b3);
 
     List<byte[]> bexpected = new ArrayList<byte[]>();
     bexpected.add(b3);
     bexpected.add(bbar);
     bexpected.add(b1);
 
-    String bstatus = jedis.lset(bfoo, 1, bbar);
+    String bstatus = cuckooJedis.lset(bfoo, 1, bbar);
 
     assertEquals("OK", bstatus);
-    assertByteArrayListEquals(bexpected, jedis.lrange(bfoo, 0, 100));
+    assertByteArrayListEquals(bexpected, cuckooJedis.lrange(bfoo, 0, 100));
   }
 
   @Test
   public void lindex() {
-    jedis.lpush("foo", "1");
-    jedis.lpush("foo", "2");
-    jedis.lpush("foo", "3");
+    cuckooJedis.lpush("foo", "1");
+    cuckooJedis.lpush("foo", "2");
+    cuckooJedis.lpush("foo", "3");
 
-    assertEquals("3", jedis.lindex("foo", 0));
-    assertNull(jedis.lindex("foo", 100));
+    assertEquals("3", cuckooJedis.lindex("foo", 0));
+    assertNull(cuckooJedis.lindex("foo", 100));
 
     // Binary
-    jedis.lpush(bfoo, b1);
-    jedis.lpush(bfoo, b2);
-    jedis.lpush(bfoo, b3);
+    cuckooJedis.lpush(bfoo, b1);
+    cuckooJedis.lpush(bfoo, b2);
+    cuckooJedis.lpush(bfoo, b3);
 
-    assertArrayEquals(b3, jedis.lindex(bfoo, 0));
-    assertNull(jedis.lindex(bfoo, 100));
+    assertArrayEquals(b3, cuckooJedis.lindex(bfoo, 0));
+    assertNull(cuckooJedis.lindex(bfoo, 100));
 
   }
 
   @Test
   public void lrem() {
-    jedis.lpush("foo", "hello");
-    jedis.lpush("foo", "hello");
-    jedis.lpush("foo", "x");
-    jedis.lpush("foo", "hello");
-    jedis.lpush("foo", "c");
-    jedis.lpush("foo", "b");
-    jedis.lpush("foo", "a");
+    cuckooJedis.lpush("foo", "hello");
+    cuckooJedis.lpush("foo", "hello");
+    cuckooJedis.lpush("foo", "x");
+    cuckooJedis.lpush("foo", "hello");
+    cuckooJedis.lpush("foo", "c");
+    cuckooJedis.lpush("foo", "b");
+    cuckooJedis.lpush("foo", "a");
 
-    long count = jedis.lrem("foo", -2, "hello");
+    long count = cuckooJedis.lrem("foo", -2, "hello");
 
     List<String> expected = new ArrayList<String>();
     expected.add("a");
@@ -259,19 +259,19 @@ public class ListCommandsTest extends JedisCommandTestBase {
     expected.add("x");
 
     assertEquals(2, count);
-    assertEquals(expected, jedis.lrange("foo", 0, 1000));
-    assertEquals(0, jedis.lrem("bar", 100, "foo").intValue());
+    assertEquals(expected, cuckooJedis.lrange("foo", 0, 1000));
+    assertEquals(0, cuckooJedis.lrem("bar", 100, "foo").intValue());
 
     // Binary
-    jedis.lpush(bfoo, bhello);
-    jedis.lpush(bfoo, bhello);
-    jedis.lpush(bfoo, bx);
-    jedis.lpush(bfoo, bhello);
-    jedis.lpush(bfoo, bC);
-    jedis.lpush(bfoo, bB);
-    jedis.lpush(bfoo, bA);
+    cuckooJedis.lpush(bfoo, bhello);
+    cuckooJedis.lpush(bfoo, bhello);
+    cuckooJedis.lpush(bfoo, bx);
+    cuckooJedis.lpush(bfoo, bhello);
+    cuckooJedis.lpush(bfoo, bC);
+    cuckooJedis.lpush(bfoo, bB);
+    cuckooJedis.lpush(bfoo, bA);
 
-    long bcount = jedis.lrem(bfoo, -2, bhello);
+    long bcount = cuckooJedis.lrem(bfoo, -2, bhello);
 
     List<byte[]> bexpected = new ArrayList<byte[]>();
     bexpected.add(bA);
@@ -281,103 +281,103 @@ public class ListCommandsTest extends JedisCommandTestBase {
     bexpected.add(bx);
 
     assertEquals(2, bcount);
-    assertByteArrayListEquals(bexpected, jedis.lrange(bfoo, 0, 1000));
-    assertEquals(0, jedis.lrem(bbar, 100, bfoo).intValue());
+    assertByteArrayListEquals(bexpected, cuckooJedis.lrange(bfoo, 0, 1000));
+    assertEquals(0, cuckooJedis.lrem(bbar, 100, bfoo).intValue());
 
   }
 
   @Test
   public void lpop() {
-    jedis.rpush("foo", "a");
-    jedis.rpush("foo", "b");
-    jedis.rpush("foo", "c");
+    cuckooJedis.rpush("foo", "a");
+    cuckooJedis.rpush("foo", "b");
+    cuckooJedis.rpush("foo", "c");
 
-    String element = jedis.lpop("foo");
+    String element = cuckooJedis.lpop("foo");
     assertEquals("a", element);
 
     List<String> expected = new ArrayList<String>();
     expected.add("b");
     expected.add("c");
 
-    assertEquals(expected, jedis.lrange("foo", 0, 1000));
-    jedis.lpop("foo");
-    jedis.lpop("foo");
+    assertEquals(expected, cuckooJedis.lrange("foo", 0, 1000));
+    cuckooJedis.lpop("foo");
+    cuckooJedis.lpop("foo");
 
-    element = jedis.lpop("foo");
+    element = cuckooJedis.lpop("foo");
     assertNull(element);
 
     // Binary
-    jedis.rpush(bfoo, bA);
-    jedis.rpush(bfoo, bB);
-    jedis.rpush(bfoo, bC);
+    cuckooJedis.rpush(bfoo, bA);
+    cuckooJedis.rpush(bfoo, bB);
+    cuckooJedis.rpush(bfoo, bC);
 
-    byte[] belement = jedis.lpop(bfoo);
+    byte[] belement = cuckooJedis.lpop(bfoo);
     assertArrayEquals(bA, belement);
 
     List<byte[]> bexpected = new ArrayList<byte[]>();
     bexpected.add(bB);
     bexpected.add(bC);
 
-    assertByteArrayListEquals(bexpected, jedis.lrange(bfoo, 0, 1000));
-    jedis.lpop(bfoo);
-    jedis.lpop(bfoo);
+    assertByteArrayListEquals(bexpected, cuckooJedis.lrange(bfoo, 0, 1000));
+    cuckooJedis.lpop(bfoo);
+    cuckooJedis.lpop(bfoo);
 
-    belement = jedis.lpop(bfoo);
+    belement = cuckooJedis.lpop(bfoo);
     assertNull(belement);
 
   }
 
   @Test
   public void rpop() {
-    jedis.rpush("foo", "a");
-    jedis.rpush("foo", "b");
-    jedis.rpush("foo", "c");
+    cuckooJedis.rpush("foo", "a");
+    cuckooJedis.rpush("foo", "b");
+    cuckooJedis.rpush("foo", "c");
 
-    String element = jedis.rpop("foo");
+    String element = cuckooJedis.rpop("foo");
     assertEquals("c", element);
 
     List<String> expected = new ArrayList<String>();
     expected.add("a");
     expected.add("b");
 
-    assertEquals(expected, jedis.lrange("foo", 0, 1000));
-    jedis.rpop("foo");
-    jedis.rpop("foo");
+    assertEquals(expected, cuckooJedis.lrange("foo", 0, 1000));
+    cuckooJedis.rpop("foo");
+    cuckooJedis.rpop("foo");
 
-    element = jedis.rpop("foo");
+    element = cuckooJedis.rpop("foo");
     assertNull(element);
 
     // Binary
-    jedis.rpush(bfoo, bA);
-    jedis.rpush(bfoo, bB);
-    jedis.rpush(bfoo, bC);
+    cuckooJedis.rpush(bfoo, bA);
+    cuckooJedis.rpush(bfoo, bB);
+    cuckooJedis.rpush(bfoo, bC);
 
-    byte[] belement = jedis.rpop(bfoo);
+    byte[] belement = cuckooJedis.rpop(bfoo);
     assertArrayEquals(bC, belement);
 
     List<byte[]> bexpected = new ArrayList<byte[]>();
     bexpected.add(bA);
     bexpected.add(bB);
 
-    assertByteArrayListEquals(bexpected, jedis.lrange(bfoo, 0, 1000));
-    jedis.rpop(bfoo);
-    jedis.rpop(bfoo);
+    assertByteArrayListEquals(bexpected, cuckooJedis.lrange(bfoo, 0, 1000));
+    cuckooJedis.rpop(bfoo);
+    cuckooJedis.rpop(bfoo);
 
-    belement = jedis.rpop(bfoo);
+    belement = cuckooJedis.rpop(bfoo);
     assertNull(belement);
 
   }
 
   @Test
   public void rpoplpush() {
-    jedis.rpush("foo", "a");
-    jedis.rpush("foo", "b");
-    jedis.rpush("foo", "c");
+    cuckooJedis.rpush("foo", "a");
+    cuckooJedis.rpush("foo", "b");
+    cuckooJedis.rpush("foo", "c");
 
-    jedis.rpush("dst", "foo");
-    jedis.rpush("dst", "bar");
+    cuckooJedis.rpush("dst", "foo");
+    cuckooJedis.rpush("dst", "bar");
 
-    String element = jedis.rpoplpush("foo", "dst");
+    String element = cuckooJedis.rpoplpush("foo", "dst");
 
     assertEquals("c", element);
 
@@ -390,18 +390,18 @@ public class ListCommandsTest extends JedisCommandTestBase {
     dstExpected.add("foo");
     dstExpected.add("bar");
 
-    assertEquals(srcExpected, jedis.lrange("foo", 0, 1000));
-    assertEquals(dstExpected, jedis.lrange("dst", 0, 1000));
+    assertEquals(srcExpected, cuckooJedis.lrange("foo", 0, 1000));
+    assertEquals(dstExpected, cuckooJedis.lrange("dst", 0, 1000));
 
     // Binary
-    jedis.rpush(bfoo, bA);
-    jedis.rpush(bfoo, bB);
-    jedis.rpush(bfoo, bC);
+    cuckooJedis.rpush(bfoo, bA);
+    cuckooJedis.rpush(bfoo, bB);
+    cuckooJedis.rpush(bfoo, bC);
 
-    jedis.rpush(bdst, bfoo);
-    jedis.rpush(bdst, bbar);
+    cuckooJedis.rpush(bdst, bfoo);
+    cuckooJedis.rpush(bdst, bbar);
 
-    byte[] belement = jedis.rpoplpush(bfoo, bdst);
+    byte[] belement = cuckooJedis.rpoplpush(bfoo, bdst);
 
     assertArrayEquals(bC, belement);
 
@@ -414,18 +414,18 @@ public class ListCommandsTest extends JedisCommandTestBase {
     bdstExpected.add(bfoo);
     bdstExpected.add(bbar);
 
-    assertByteArrayListEquals(bsrcExpected, jedis.lrange(bfoo, 0, 1000));
-    assertByteArrayListEquals(bdstExpected, jedis.lrange(bdst, 0, 1000));
+    assertByteArrayListEquals(bsrcExpected, cuckooJedis.lrange(bfoo, 0, 1000));
+    assertByteArrayListEquals(bdstExpected, cuckooJedis.lrange(bdst, 0, 1000));
 
   }
 
   @Test
   public void blpop() throws InterruptedException {
-    List<String> result = jedis.blpop(1, "foo");
+    List<String> result = cuckooJedis.blpop(1, "foo");
     assertNull(result);
 
-    jedis.lpush("foo", "bar");
-    result = jedis.blpop(1, "foo");
+    cuckooJedis.lpush("foo", "bar");
+    result = cuckooJedis.blpop(1, "foo");
 
     assertNotNull(result);
     assertEquals(2, result.size());
@@ -433,8 +433,8 @@ public class ListCommandsTest extends JedisCommandTestBase {
     assertEquals("bar", result.get(1));
 
     // Binary
-    jedis.lpush(bfoo, bbar);
-    List<byte[]> bresult = jedis.blpop(1, bfoo);
+    cuckooJedis.lpush(bfoo, bbar);
+    List<byte[]> bresult = cuckooJedis.blpop(1, bfoo);
 
     assertNotNull(bresult);
     assertEquals(2, bresult.size());
@@ -445,11 +445,11 @@ public class ListCommandsTest extends JedisCommandTestBase {
 
   @Test
   public void brpop() throws InterruptedException {
-    List<String> result = jedis.brpop(1, "foo");
+    List<String> result = cuckooJedis.brpop(1, "foo");
     assertNull(result);
 
-    jedis.lpush("foo", "bar");
-    result = jedis.brpop(1, "foo");
+    cuckooJedis.lpush("foo", "bar");
+    result = cuckooJedis.brpop(1, "foo");
     assertNotNull(result);
     assertEquals(2, result.size());
     assertEquals("foo", result.get(0));
@@ -457,8 +457,8 @@ public class ListCommandsTest extends JedisCommandTestBase {
 
     // Binary
 
-    jedis.lpush(bfoo, bbar);
-    List<byte[]> bresult = jedis.brpop(1, bfoo);
+    cuckooJedis.lpush(bfoo, bbar);
+    List<byte[]> bresult = cuckooJedis.brpop(1, bfoo);
     assertNotNull(bresult);
     assertEquals(2, bresult.size());
     assertArrayEquals(bfoo, bresult.get(0));
@@ -468,76 +468,76 @@ public class ListCommandsTest extends JedisCommandTestBase {
 
   @Test
   public void lpushx() {
-    long status = jedis.lpushx("foo", "bar");
+    long status = cuckooJedis.lpushx("foo", "bar");
     assertEquals(0, status);
 
-    jedis.lpush("foo", "a");
-    status = jedis.lpushx("foo", "b");
+    cuckooJedis.lpush("foo", "a");
+    status = cuckooJedis.lpushx("foo", "b");
     assertEquals(2, status);
 
     // Binary
-    long bstatus = jedis.lpushx(bfoo, bbar);
+    long bstatus = cuckooJedis.lpushx(bfoo, bbar);
     assertEquals(0, bstatus);
 
-    jedis.lpush(bfoo, bA);
-    bstatus = jedis.lpushx(bfoo, bB);
+    cuckooJedis.lpush(bfoo, bA);
+    bstatus = cuckooJedis.lpushx(bfoo, bB);
     assertEquals(2, bstatus);
 
   }
 
   @Test
   public void rpushx() {
-    long status = jedis.rpushx("foo", "bar");
+    long status = cuckooJedis.rpushx("foo", "bar");
     assertEquals(0, status);
 
-    jedis.lpush("foo", "a");
-    status = jedis.rpushx("foo", "b");
+    cuckooJedis.lpush("foo", "a");
+    status = cuckooJedis.rpushx("foo", "b");
     assertEquals(2, status);
 
     // Binary
-    long bstatus = jedis.rpushx(bfoo, bbar);
+    long bstatus = cuckooJedis.rpushx(bfoo, bbar);
     assertEquals(0, bstatus);
 
-    jedis.lpush(bfoo, bA);
-    bstatus = jedis.rpushx(bfoo, bB);
+    cuckooJedis.lpush(bfoo, bA);
+    bstatus = cuckooJedis.rpushx(bfoo, bB);
     assertEquals(2, bstatus);
   }
 
   @Test
   public void linsert() {
-    long status = jedis.linsert("foo", ListPosition.BEFORE, "bar", "car");
+    long status = cuckooJedis.linsert("foo", ListPosition.BEFORE, "bar", "car");
     assertEquals(0, status);
 
-    jedis.lpush("foo", "a");
-    status = jedis.linsert("foo", ListPosition.AFTER, "a", "b");
+    cuckooJedis.lpush("foo", "a");
+    status = cuckooJedis.linsert("foo", ListPosition.AFTER, "a", "b");
     assertEquals(2, status);
 
-    List<String> actual = jedis.lrange("foo", 0, 100);
+    List<String> actual = cuckooJedis.lrange("foo", 0, 100);
     List<String> expected = new ArrayList<String>();
     expected.add("a");
     expected.add("b");
 
     assertEquals(expected, actual);
 
-    status = jedis.linsert("foo", ListPosition.BEFORE, "bar", "car");
+    status = cuckooJedis.linsert("foo", ListPosition.BEFORE, "bar", "car");
     assertEquals(-1, status);
 
     // Binary
-    long bstatus = jedis.linsert(bfoo, ListPosition.BEFORE, bbar, bcar);
+    long bstatus = cuckooJedis.linsert(bfoo, ListPosition.BEFORE, bbar, bcar);
     assertEquals(0, bstatus);
 
-    jedis.lpush(bfoo, bA);
-    bstatus = jedis.linsert(bfoo, ListPosition.AFTER, bA, bB);
+    cuckooJedis.lpush(bfoo, bA);
+    bstatus = cuckooJedis.linsert(bfoo, ListPosition.AFTER, bA, bB);
     assertEquals(2, bstatus);
 
-    List<byte[]> bactual = jedis.lrange(bfoo, 0, 100);
+    List<byte[]> bactual = cuckooJedis.lrange(bfoo, 0, 100);
     List<byte[]> bexpected = new ArrayList<byte[]>();
     bexpected.add(bA);
     bexpected.add(bB);
 
     assertByteArrayListEquals(bexpected, bactual);
 
-    bstatus = jedis.linsert(bfoo, ListPosition.BEFORE, bbar, bcar);
+    bstatus = cuckooJedis.linsert(bfoo, ListPosition.BEFORE, bbar, bcar);
     assertEquals(-1, bstatus);
 
   }
@@ -548,7 +548,7 @@ public class ListCommandsTest extends JedisCommandTestBase {
       public void run() {
         try {
           Thread.sleep(100);
-          Jedis j = createJedis();
+          CuckooJedis j = createJedis();
           j.lpush("foo", "a");
         } catch (InterruptedException e) {
           e.printStackTrace();
@@ -556,17 +556,17 @@ public class ListCommandsTest extends JedisCommandTestBase {
       }
     })).start();
 
-    String element = jedis.brpoplpush("foo", "bar", 0);
+    String element = cuckooJedis.brpoplpush("foo", "bar", 0);
 
     assertEquals("a", element);
-    assertEquals(1, jedis.llen("bar").longValue());
-    assertEquals("a", jedis.lrange("bar", 0, -1).get(0));
+    assertEquals(1, cuckooJedis.llen("bar").longValue());
+    assertEquals("a", cuckooJedis.lrange("bar", 0, -1).get(0));
 
     (new Thread(new Runnable() {
       public void run() {
         try {
           Thread.sleep(100);
-          Jedis j = createJedis();
+          CuckooJedis j = createJedis();
           j.lpush("foo", "a");
         } catch (InterruptedException e) {
           e.printStackTrace();
@@ -574,11 +574,11 @@ public class ListCommandsTest extends JedisCommandTestBase {
       }
     })).start();
 
-    byte[] brpoplpush = jedis.brpoplpush("foo".getBytes(), "bar".getBytes(), 0);
+    byte[] brpoplpush = cuckooJedis.brpoplpush("foo".getBytes(), "bar".getBytes(), 0);
 
     assertTrue(Arrays.equals("a".getBytes(), brpoplpush));
-    assertEquals(1, jedis.llen("bar").longValue());
-    assertEquals("a", jedis.lrange("bar", 0, -1).get(0));
+    assertEquals(1, cuckooJedis.llen("bar").longValue());
+    assertEquals("a", cuckooJedis.lrange("bar", 0, -1).get(0));
 
   }
 }

@@ -11,7 +11,7 @@ import org.junit.Test;
 
 import redis.clients.jedis.util.JedisURIHelper;
 
-public class JedisURIHelperTest {
+public class CuckooJedisURIHelperTest {
 
   @Test
   public void shouldGetPasswordFromURIWithCredentials() throws URISyntaxException {

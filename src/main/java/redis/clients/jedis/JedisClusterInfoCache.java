@@ -18,8 +18,8 @@ import redis.clients.jedis.exceptions.JedisException;
 import redis.clients.jedis.util.SafeEncoder;
 
 public class JedisClusterInfoCache {
-  private final Map<String, JedisPool> nodes = new HashMap<String, JedisPool>();
-  private final Map<Integer, JedisPool> slots = new HashMap<Integer, JedisPool>();
+  private final Map<String, CuckooJedisPool> nodes = new HashMap<String, CuckooJedisPool>();
+  private final Map<Integer, CuckooJedisPool> slots = new HashMap<Integer, CuckooJedisPool>();
 
   private final ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
   private final Lock r = rwl.readLock();
@@ -65,12 +65,12 @@ public class JedisClusterInfoCache {
     this.hostAndPortMap = hostAndPortMap;
   }
 
-  public void discoverClusterNodesAndSlots(Jedis jedis) {
+  public void discoverClusterNodesAndSlots(CuckooJedis cuckooJedis) {
     w.lock();
 
     try {
       reset();
-      List<Object> slots = jedis.clusterSlots();
+      List<Object> slots = cuckooJedis.clusterSlots();
 
       for (Object slotInfoObj : slots) {
         List<Object> slotInfo = (List<Object>) slotInfoObj;
@@ -101,7 +101,7 @@ public class JedisClusterInfoCache {
     }
   }
 
-  public void renewClusterSlots(Jedis jedis) {
+  public void renewClusterSlots(CuckooJedis cuckooJedis) {
     //If rediscovering is already in process - no need to start one more same rediscovering, just return
     if (!rediscovering) {
       try {
@@ -110,17 +110,17 @@ public class JedisClusterInfoCache {
           rediscovering = true;
 
           try {
-            if (jedis != null) {
+            if (cuckooJedis != null) {
               try {
-                discoverClusterSlots(jedis);
+                discoverClusterSlots(cuckooJedis);
                 return;
               } catch (JedisException e) {
                 //try nodes from all pools
               }
             }
 
-            for (JedisPool jp : getShuffledNodesPool()) {
-              Jedis j = null;
+            for (CuckooJedisPool jp : getShuffledNodesPool()) {
+              CuckooJedis j = null;
               try {
                 j = jp.getResource();
                 discoverClusterSlots(j);
@@ -143,8 +143,8 @@ public class JedisClusterInfoCache {
     }
   }
 
-  private void discoverClusterSlots(Jedis jedis) {
-    List<Object> slots = jedis.clusterSlots();
+  private void discoverClusterSlots(CuckooJedis cuckooJedis) {
+    List<Object> slots = cuckooJedis.clusterSlots();
     this.slots.clear();
 
     for (Object slotInfoObj : slots) {
@@ -180,14 +180,14 @@ public class JedisClusterInfoCache {
     return new HostAndPort(host, port);
   }
 
-  public JedisPool setupNodeIfNotExist(HostAndPort node) {
+  public CuckooJedisPool setupNodeIfNotExist(HostAndPort node) {
     w.lock();
     try {
       String nodeKey = getNodeKey(node);
-      JedisPool existingPool = nodes.get(nodeKey);
+      CuckooJedisPool existingPool = nodes.get(nodeKey);
       if (existingPool != null) return existingPool;
 
-      JedisPool nodePool = new JedisPool(poolConfig, node.getHost(), node.getPort(),
+      CuckooJedisPool nodePool = new CuckooJedisPool(poolConfig, node.getHost(), node.getPort(),
           connectionTimeout, soTimeout, password, 0, clientName, 
           ssl, sslSocketFactory, sslParameters, hostnameVerifier);
       nodes.put(nodeKey, nodePool);
@@ -200,7 +200,7 @@ public class JedisClusterInfoCache {
   public void assignSlotToNode(int slot, HostAndPort targetNode) {
     w.lock();
     try {
-      JedisPool targetPool = setupNodeIfNotExist(targetNode);
+      CuckooJedisPool targetPool = setupNodeIfNotExist(targetNode);
       slots.put(slot, targetPool);
     } finally {
       w.unlock();
@@ -210,7 +210,7 @@ public class JedisClusterInfoCache {
   public void assignSlotsToNode(List<Integer> targetSlots, HostAndPort targetNode) {
     w.lock();
     try {
-      JedisPool targetPool = setupNodeIfNotExist(targetNode);
+      CuckooJedisPool targetPool = setupNodeIfNotExist(targetNode);
       for (Integer slot : targetSlots) {
         slots.put(slot, targetPool);
       }
@@ -219,7 +219,7 @@ public class JedisClusterInfoCache {
     }
   }
 
-  public JedisPool getNode(String nodeKey) {
+  public CuckooJedisPool getNode(String nodeKey) {
     r.lock();
     try {
       return nodes.get(nodeKey);
@@ -228,7 +228,7 @@ public class JedisClusterInfoCache {
     }
   }
 
-  public JedisPool getSlotPool(int slot) {
+  public CuckooJedisPool getSlotPool(int slot) {
     r.lock();
     try {
       return slots.get(slot);
@@ -237,19 +237,19 @@ public class JedisClusterInfoCache {
     }
   }
 
-  public Map<String, JedisPool> getNodes() {
+  public Map<String, CuckooJedisPool> getNodes() {
     r.lock();
     try {
-      return new HashMap<String, JedisPool>(nodes);
+      return new HashMap<String, CuckooJedisPool>(nodes);
     } finally {
       r.unlock();
     }
   }
 
-  public List<JedisPool> getShuffledNodesPool() {
+  public List<CuckooJedisPool> getShuffledNodesPool() {
     r.lock();
     try {
-      List<JedisPool> pools = new ArrayList<JedisPool>(nodes.values());
+      List<CuckooJedisPool> pools = new ArrayList<CuckooJedisPool>(nodes.values());
       Collections.shuffle(pools);
       return pools;
     } finally {
@@ -263,7 +263,7 @@ public class JedisClusterInfoCache {
   public void reset() {
     w.lock();
     try {
-      for (JedisPool pool : nodes.values()) {
+      for (CuckooJedisPool pool : nodes.values()) {
         try {
           if (pool != null) {
             pool.destroy();
@@ -287,8 +287,8 @@ public class JedisClusterInfoCache {
     return client.getHost() + ":" + client.getPort();
   }
 
-  public static String getNodeKey(Jedis jedis) {
-    return getNodeKey(jedis.getClient());
+  public static String getNodeKey(CuckooJedis cuckooJedis) {
+    return getNodeKey(cuckooJedis.getClient());
   }
 
   private List<Integer> getAssignedSlotArray(List<Object> slotInfo) {

@@ -15,7 +15,7 @@ import org.junit.Before;
 import org.junit.Test;
 import redis.clients.jedis.util.JedisByteHashMap;
 
-public class JedisByteHashMapTest {
+public class CuckooJedisByteHashMapTest {
     private static JedisByteHashMap map = new JedisByteHashMap();
 
     private byte[][] keys = {{'k', 'e', 'y', '1'}, {'k', 'e', 'y', '2'}, {'k', 'e', 'y', '3'}};

@@ -8,34 +8,34 @@ import java.util.Set;
 import org.junit.After;
 import org.junit.Before;
 
+import redis.clients.jedis.CuckooJedis;
 import redis.clients.jedis.HostAndPort;
-import redis.clients.jedis.Jedis;
 import redis.clients.jedis.tests.HostAndPortUtil;
 
-public abstract class JedisCommandTestBase {
+public abstract class CuckooJedisCommandTestBase {
   protected static final HostAndPort hnp = HostAndPortUtil.getRedisServers().get(0);
 
-  protected Jedis jedis;
+  protected CuckooJedis cuckooJedis;
 
-  public JedisCommandTestBase() {
+  public CuckooJedisCommandTestBase() {
     super();
   }
 
   @Before
   public void setUp() throws Exception {
-    jedis = new Jedis(hnp.getHost(), hnp.getPort(), 500);
-    jedis.connect();
-    jedis.auth("foobared");
-    jedis.flushAll();
+    cuckooJedis = new CuckooJedis(hnp.getHost(), hnp.getPort(), 500);
+    cuckooJedis.connect();
+    cuckooJedis.auth("foobared");
+    cuckooJedis.flushAll();
   }
 
   @After
   public void tearDown() {
-    jedis.disconnect();
+    cuckooJedis.disconnect();
   }
 
-  protected Jedis createJedis() {
-    Jedis j = new Jedis(hnp);
+  protected CuckooJedis createJedis() {
+    CuckooJedis j = new CuckooJedis(hnp);
     j.connect();
     j.auth("foobared");
     j.flushAll();

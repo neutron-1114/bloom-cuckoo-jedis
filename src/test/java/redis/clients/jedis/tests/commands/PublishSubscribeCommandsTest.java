@@ -16,17 +16,17 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.Test;
 
 import redis.clients.jedis.BinaryJedisPubSub;
-import redis.clients.jedis.Jedis;
+import redis.clients.jedis.CuckooJedis;
 import redis.clients.jedis.JedisPubSub;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 import redis.clients.jedis.util.SafeEncoder;
 
-public class PublishSubscribeCommandsTest extends JedisCommandTestBase {
+public class PublishSubscribeCommandsTest extends CuckooJedisCommandTestBase {
   private void publishOne(final String channel, final String message) {
     Thread t = new Thread(new Runnable() {
       public void run() {
         try {
-          Jedis j = createJedis();
+          CuckooJedis j = createJedis();
           j.publish(channel, message);
           j.disconnect();
         } catch (Exception ex) {
@@ -38,7 +38,7 @@ public class PublishSubscribeCommandsTest extends JedisCommandTestBase {
 
   @Test
   public void subscribe() throws InterruptedException {
-    jedis.subscribe(new JedisPubSub() {
+    cuckooJedis.subscribe(new JedisPubSub() {
       public void onMessage(String channel, String message) {
         assertEquals("foo", channel);
         assertEquals("exit", message);
@@ -64,7 +64,7 @@ public class PublishSubscribeCommandsTest extends JedisCommandTestBase {
   public void pubSubChannels() {
     final List<String> expectedActiveChannels = Arrays
         .asList("testchan1", "testchan2", "testchan3");
-    jedis.subscribe(new JedisPubSub() {
+    cuckooJedis.subscribe(new JedisPubSub() {
       private int count = 0;
 
       @Override
@@ -72,8 +72,8 @@ public class PublishSubscribeCommandsTest extends JedisCommandTestBase {
         count++;
         // All channels are subscribed
         if (count == 3) {
-          Jedis otherJedis = createJedis();
-          List<String> activeChannels = otherJedis.pubsubChannels("test*");
+          CuckooJedis otherCuckooJedis = createJedis();
+          List<String> activeChannels = otherCuckooJedis.pubsubChannels("test*");
           assertTrue(expectedActiveChannels.containsAll(activeChannels));
           unsubscribe();
         }
@@ -85,7 +85,7 @@ public class PublishSubscribeCommandsTest extends JedisCommandTestBase {
   public void pubSubChannelWithPingPong() throws InterruptedException {
     final CountDownLatch latchUnsubscribed = new CountDownLatch(1);
     final CountDownLatch latchReceivedPong = new CountDownLatch(1);
-    jedis.subscribe(new JedisPubSub() {
+    cuckooJedis.subscribe(new JedisPubSub() {
 
       @Override
       public void onSubscribe(String channel, int subscribedChannels) {
@@ -114,15 +114,15 @@ public class PublishSubscribeCommandsTest extends JedisCommandTestBase {
 
   @Test
   public void pubSubNumPat() {
-    jedis.psubscribe(new JedisPubSub() {
+    cuckooJedis.psubscribe(new JedisPubSub() {
       private int count = 0;
 
       @Override
       public void onPSubscribe(String pattern, int subscribedChannels) {
         count++;
         if (count == 3) {
-          Jedis otherJedis = createJedis();
-          Long numPatterns = otherJedis.pubsubNumPat();
+          CuckooJedis otherCuckooJedis = createJedis();
+          Long numPatterns = otherCuckooJedis.pubsubNumPat();
           assertEquals(new Long(2l), numPatterns);
           punsubscribe();
         }
@@ -136,15 +136,15 @@ public class PublishSubscribeCommandsTest extends JedisCommandTestBase {
     final Map<String, String> expectedNumSub = new HashMap<String, String>();
     expectedNumSub.put("testchannel2", "1");
     expectedNumSub.put("testchannel1", "1");
-    jedis.subscribe(new JedisPubSub() {
+    cuckooJedis.subscribe(new JedisPubSub() {
       private int count = 0;
 
       @Override
       public void onSubscribe(String channel, int subscribedChannels) {
         count++;
         if (count == 2) {
-          Jedis otherJedis = createJedis();
-          Map<String, String> numSub = otherJedis.pubsubNumSub("testchannel1", "testchannel2");
+          CuckooJedis otherCuckooJedis = createJedis();
+          Map<String, String> numSub = otherCuckooJedis.pubsubNumSub("testchannel1", "testchannel2");
           assertEquals(expectedNumSub, numSub);
           unsubscribe();
         }
@@ -154,7 +154,7 @@ public class PublishSubscribeCommandsTest extends JedisCommandTestBase {
 
   @Test
   public void subscribeMany() throws UnknownHostException, IOException, InterruptedException {
-    jedis.subscribe(new JedisPubSub() {
+    cuckooJedis.subscribe(new JedisPubSub() {
       public void onMessage(String channel, String message) {
         unsubscribe(channel);
       }
@@ -168,7 +168,7 @@ public class PublishSubscribeCommandsTest extends JedisCommandTestBase {
 
   @Test
   public void psubscribe() throws UnknownHostException, IOException, InterruptedException {
-    jedis.psubscribe(new JedisPubSub() {
+    cuckooJedis.psubscribe(new JedisPubSub() {
       public void onPSubscribe(String pattern, int subscribedChannels) {
         assertEquals("foo.*", pattern);
         assertEquals(1, subscribedChannels);
@@ -192,7 +192,7 @@ public class PublishSubscribeCommandsTest extends JedisCommandTestBase {
 
   @Test
   public void psubscribeMany() throws UnknownHostException, IOException, InterruptedException {
-    jedis.psubscribe(new JedisPubSub() {
+    cuckooJedis.psubscribe(new JedisPubSub() {
       public void onPSubscribe(String pattern, int subscribedChannels) {
         publishOne(pattern.replace("*", "123"), "exit");
       }
@@ -227,12 +227,12 @@ public class PublishSubscribeCommandsTest extends JedisCommandTestBase {
       }
     };
 
-    jedis.subscribe(pubsub, "foo");
+    cuckooJedis.subscribe(pubsub, "foo");
   }
 
   @Test
   public void binarySubscribe() throws UnknownHostException, IOException, InterruptedException {
-    jedis.subscribe(new BinaryJedisPubSub() {
+    cuckooJedis.subscribe(new BinaryJedisPubSub() {
       public void onMessage(byte[] channel, byte[] message) {
         assertTrue(Arrays.equals(SafeEncoder.encode("foo"), channel));
         assertTrue(Arrays.equals(SafeEncoder.encode("exit"), message));
@@ -254,7 +254,7 @@ public class PublishSubscribeCommandsTest extends JedisCommandTestBase {
 
   @Test
   public void binarySubscribeMany() throws UnknownHostException, IOException, InterruptedException {
-    jedis.subscribe(new BinaryJedisPubSub() {
+    cuckooJedis.subscribe(new BinaryJedisPubSub() {
       public void onMessage(byte[] channel, byte[] message) {
         unsubscribe(channel);
       }
@@ -267,7 +267,7 @@ public class PublishSubscribeCommandsTest extends JedisCommandTestBase {
 
   @Test
   public void binaryPsubscribe() throws UnknownHostException, IOException, InterruptedException {
-    jedis.psubscribe(new BinaryJedisPubSub() {
+    cuckooJedis.psubscribe(new BinaryJedisPubSub() {
       public void onPSubscribe(byte[] pattern, int subscribedChannels) {
         assertTrue(Arrays.equals(SafeEncoder.encode("foo.*"), pattern));
         assertEquals(1, subscribedChannels);
@@ -290,7 +290,7 @@ public class PublishSubscribeCommandsTest extends JedisCommandTestBase {
 
   @Test
   public void binaryPsubscribeMany() throws UnknownHostException, IOException, InterruptedException {
-    jedis.psubscribe(new BinaryJedisPubSub() {
+    cuckooJedis.psubscribe(new BinaryJedisPubSub() {
       public void onPSubscribe(byte[] pattern, int subscribedChannels) {
         publishOne(SafeEncoder.encode(pattern).replace("*", "123"), "exit");
       }
@@ -327,7 +327,7 @@ public class PublishSubscribeCommandsTest extends JedisCommandTestBase {
       }
     };
 
-    jedis.subscribe(pubsub, SafeEncoder.encode("foo"));
+    cuckooJedis.subscribe(pubsub, SafeEncoder.encode("foo"));
   }
 
   @Test(expected = JedisConnectionException.class)
@@ -339,7 +339,7 @@ public class PublishSubscribeCommandsTest extends JedisCommandTestBase {
 
   @Test(expected = JedisConnectionException.class)
   public void handleClientOutputBufferLimitForSubscribeTooSlow() throws InterruptedException {
-    final Jedis j = createJedis();
+    final CuckooJedis j = createJedis();
     final AtomicBoolean exit = new AtomicBoolean(false);
 
     final Thread t = new Thread(new Runnable() {
@@ -368,7 +368,7 @@ public class PublishSubscribeCommandsTest extends JedisCommandTestBase {
     });
     t.start();
     try {
-      jedis.subscribe(new JedisPubSub() {
+      cuckooJedis.subscribe(new JedisPubSub() {
         public void onMessage(String channel, String message) {
           try {
             // wait 0.5 secs to slow down subscribe and

@@ -6,7 +6,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.cert.CertificateException;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -22,15 +21,12 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import redis.clients.jedis.HostAndPort;
-import redis.clients.jedis.JedisCluster;
-import redis.clients.jedis.JedisClusterHostAndPortMap;
-import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.JedisPoolConfig;
+import redis.clients.jedis.*;
+import redis.clients.jedis.CuckooJedisPool;
 import redis.clients.jedis.exceptions.*;
-import redis.clients.jedis.tests.SSLJedisTest.BasicHostnameVerifier;
+import redis.clients.jedis.tests.SSLCuckooJedisTest.BasicHostnameVerifier;
 
-public class SSLJedisClusterTest extends JedisClusterTest {
+public class SSLCuckooJedisClusterTest extends CuckooJedisClusterTest {
   private static final int DEFAULT_TIMEOUT = 2000;
   private static final int DEFAULT_REDIRECTIONS = 5;
   private static final JedisPoolConfig DEFAULT_CONFIG = new JedisPoolConfig();
@@ -53,12 +49,12 @@ public class SSLJedisClusterTest extends JedisClusterTest {
   public void setUp() throws InterruptedException {
     super.setUp();
     
-    SSLJedisTest.setupTrustStore(); // set up trust store for SSL tests
+    SSLCuckooJedisTest.setupTrustStore(); // set up trust store for SSL tests
   }
 
   @AfterClass
   public static void cleanUp() {
-    JedisClusterTest.cleanUp();
+    CuckooJedisClusterTest.cleanUp();
   }
 
   @After
@@ -72,7 +68,7 @@ public class SSLJedisClusterTest extends JedisClusterTest {
     jedisClusterNode.add(new HostAndPort("localhost", 8379));
     JedisCluster jc = new JedisCluster(jedisClusterNode, DEFAULT_TIMEOUT, DEFAULT_TIMEOUT, DEFAULT_REDIRECTIONS,
     		                           "cluster", null, DEFAULT_CONFIG, true, null, null, null, hostAndPortMap);
-    Map<String, JedisPool> clusterNodes = jc.getClusterNodes();
+    Map<String, CuckooJedisPool> clusterNodes = jc.getClusterNodes();
     assertEquals(3, clusterNodes.size());
     assertTrue(clusterNodes.containsKey("localhost:8379"));
     assertTrue(clusterNodes.containsKey("localhost:8380"));
@@ -99,7 +95,7 @@ public class SSLJedisClusterTest extends JedisClusterTest {
     JedisCluster jc = new JedisCluster(jedisClusterNode, DEFAULT_TIMEOUT, DEFAULT_TIMEOUT, DEFAULT_REDIRECTIONS,
                                        "cluster", null, DEFAULT_CONFIG, true, null, null, null, null);
 
-    Map<String, JedisPool> clusterNodes = jc.getClusterNodes();
+    Map<String, CuckooJedisPool> clusterNodes = jc.getClusterNodes();
     assertEquals(3, clusterNodes.size());
     assertTrue(clusterNodes.containsKey("127.0.0.1:7379"));
     assertTrue(clusterNodes.containsKey("127.0.0.1:7380"));
@@ -193,8 +189,8 @@ public class SSLJedisClusterTest extends JedisClusterTest {
           null, null, hostnameVerifier, portMap);
       Assert.fail("The code did not throw the expected NullPointerException.");
     } catch (NullPointerException e) {
-      // Null pointer exception occurs from closing Jedis object that did not connect due to custom
-      // hostname validation. When closing this Jedis object, the RedisOutputStream in the underlying 
+      // Null pointer exception occurs from closing CuckooJedis object that did not connect due to custom
+      // hostname validation. When closing this CuckooJedis object, the RedisOutputStream in the underlying
       // Connection object is null and causes this exception
     } finally {
       if (jc2 != null) {
@@ -211,7 +207,7 @@ public class SSLJedisClusterTest extends JedisClusterTest {
   
   @Test
   public void connectWithCustomSocketFactory() throws Exception {
-    final SSLSocketFactory sslSocketFactory = SSLJedisTest.createTrustStoreSslSocketFactory();
+    final SSLSocketFactory sslSocketFactory = SSLCuckooJedisTest.createTrustStoreSslSocketFactory();
 
     JedisCluster jc = new JedisCluster(new HostAndPort("localhost", 8379), DEFAULT_TIMEOUT, DEFAULT_TIMEOUT,
                                        DEFAULT_REDIRECTIONS, "cluster", null, DEFAULT_CONFIG, true, 
@@ -222,7 +218,7 @@ public class SSLJedisClusterTest extends JedisClusterTest {
   
   @Test
   public void connectWithEmptyTrustStore() throws Exception {
-    final SSLSocketFactory sslSocketFactory = SSLJedisTest.createTrustNoOneSslSocketFactory();
+    final SSLSocketFactory sslSocketFactory = SSLCuckooJedisTest.createTrustNoOneSslSocketFactory();
 
     JedisCluster jc = null;
     try {
@@ -258,7 +254,7 @@ public class SSLJedisClusterTest extends JedisClusterTest {
             DEFAULT_REDIRECTIONS, "cluster", null, DEFAULT_CONFIG, false, 
             null, null, null, hostAndPortMap);
     
-    Map<String, JedisPool> nodes = jc.getClusterNodes();
+    Map<String, CuckooJedisPool> nodes = jc.getClusterNodes();
     assertTrue(nodes.containsKey("127.0.0.1:7379"));
     assertFalse(nodes.containsKey("127.0.0.1:9739"));
     jc.close();
@@ -276,7 +272,7 @@ public class SSLJedisClusterTest extends JedisClusterTest {
             DEFAULT_REDIRECTIONS, "cluster", null, DEFAULT_CONFIG, false, 
             null, null, null, hostAndPortMap);
     
-    Map<String, JedisPool> clusterNodes = jc.getClusterNodes();
+    Map<String, CuckooJedisPool> clusterNodes = jc.getClusterNodes();
     assertEquals(3, clusterNodes.size());
     assertTrue(clusterNodes.containsKey("127.0.0.1:7379"));
     assertTrue(clusterNodes.containsKey("127.0.0.1:7380"));

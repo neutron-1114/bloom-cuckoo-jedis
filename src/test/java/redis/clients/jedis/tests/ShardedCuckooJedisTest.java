@@ -16,17 +16,14 @@ import java.util.List;
 
 import org.junit.Test;
 
-import redis.clients.jedis.HostAndPort;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisShardInfo;
-import redis.clients.jedis.Protocol;
-import redis.clients.jedis.ShardedJedis;
+import redis.clients.jedis.*;
+import redis.clients.jedis.CuckooJedis;
 import redis.clients.jedis.tests.utils.ClientKillerUtil;
 import redis.clients.jedis.util.Hashing;
 import redis.clients.jedis.util.SafeEncoder;
 import redis.clients.jedis.util.Sharded;
 
-public class ShardedJedisTest {
+public class ShardedCuckooJedisTest {
   private static HostAndPort redis1 = HostAndPortUtil.getRedisServers().get(0);
   private static HostAndPort redis2 = HostAndPortUtil.getRedisServers().get(1);
 
@@ -58,8 +55,8 @@ public class ShardedJedisTest {
     assertEquals(shard1, bk);
 
     // We set a name to the instance so it's easy to find it
-    Iterator<Jedis> it = shardedJedis.getAllShards().iterator();
-    Jedis deadClient = it.next();
+    Iterator<CuckooJedis> it = shardedJedis.getAllShards().iterator();
+    CuckooJedis deadClient = it.next();
     deadClient.clientSetname("DEAD");
 
     ClientKillerUtil.killClient(deadClient, "DEAD");
@@ -74,10 +71,10 @@ public class ShardedJedisTest {
     assertEquals(true, deadClient.getClient().getSocket().isClosed());
     assertEquals(true, deadClient.getClient().isBroken());
 
-    Jedis jedis2 = it.next();
-    assertEquals(false, jedis2.isConnected());
-    assertEquals(true, jedis2.getClient().getSocket().isClosed());
-    assertEquals(false, jedis2.getClient().isBroken());
+    CuckooJedis cuckooJedis2 = it.next();
+    assertEquals(false, cuckooJedis2.isConnected());
+    assertEquals(true, cuckooJedis2.getClient().getSocket().isClosed());
+    assertEquals(false, cuckooJedis2.getClient().isBroken());
 
   }
 
@@ -125,12 +122,12 @@ public class ShardedJedisTest {
     JedisShardInfo s2 = jedis.getShardInfo("b");
     jedis.disconnect();
 
-    Jedis j = new Jedis(s1);
+    CuckooJedis j = new CuckooJedis(s1);
     j.auth("foobared");
     assertEquals("bar", j.get("a"));
     j.disconnect();
 
-    j = new Jedis(s2);
+    j = new CuckooJedis(s2);
     j.auth("foobared");
     assertEquals("bar1", j.get("b"));
     j.disconnect();
@@ -152,12 +149,12 @@ public class ShardedJedisTest {
     JedisShardInfo s2 = jedis.getShardInfo("b");
     jedis.disconnect();
 
-    Jedis j = new Jedis(s1);
+    CuckooJedis j = new CuckooJedis(s1);
     j.auth("foobared");
     assertEquals("bar", j.get("a"));
     j.disconnect();
 
-    j = new Jedis(s2);
+    j = new CuckooJedis(s2);
     j.auth("foobared");
     assertEquals("bar1", j.get("b"));
     j.disconnect();
@@ -201,7 +198,7 @@ public class ShardedJedisTest {
     shards.add(new JedisShardInfo("localhost", Protocol.DEFAULT_PORT));
     shards.add(new JedisShardInfo("localhost", Protocol.DEFAULT_PORT + 1));
     shards.add(new JedisShardInfo("localhost", Protocol.DEFAULT_PORT + 2));
-    Sharded<Jedis, JedisShardInfo> sharded = new Sharded<Jedis, JedisShardInfo>(shards, Hashing.MD5);
+    Sharded<CuckooJedis, JedisShardInfo> sharded = new Sharded<CuckooJedis, JedisShardInfo>(shards, Hashing.MD5);
     int shard_6379 = 0;
     int shard_6380 = 0;
     int shard_6381 = 0;
@@ -233,7 +230,7 @@ public class ShardedJedisTest {
     shards.add(new JedisShardInfo("localhost", Protocol.DEFAULT_PORT));
     shards.add(new JedisShardInfo("localhost", Protocol.DEFAULT_PORT + 1));
     shards.add(new JedisShardInfo("localhost", Protocol.DEFAULT_PORT + 2));
-    Sharded<Jedis, JedisShardInfo> sharded = new Sharded<Jedis, JedisShardInfo>(shards,
+    Sharded<CuckooJedis, JedisShardInfo> sharded = new Sharded<CuckooJedis, JedisShardInfo>(shards,
         Hashing.MURMUR_HASH);
     int shard_6379 = 0;
     int shard_6380 = 0;
@@ -266,14 +263,14 @@ public class ShardedJedisTest {
     shards.add(new JedisShardInfo("localhost", Protocol.DEFAULT_PORT));
     shards.add(new JedisShardInfo("localhost", Protocol.DEFAULT_PORT + 1));
     shards.add(new JedisShardInfo("localhost", Protocol.DEFAULT_PORT + 2));
-    Sharded<Jedis, JedisShardInfo> sharded = new Sharded<Jedis, JedisShardInfo>(shards,
+    Sharded<CuckooJedis, JedisShardInfo> sharded = new Sharded<CuckooJedis, JedisShardInfo>(shards,
         Hashing.MURMUR_HASH);
 
     List<JedisShardInfo> otherShards = new ArrayList<JedisShardInfo>(3);
     otherShards.add(new JedisShardInfo("otherhost", Protocol.DEFAULT_PORT));
     otherShards.add(new JedisShardInfo("otherhost", Protocol.DEFAULT_PORT + 1));
     otherShards.add(new JedisShardInfo("otherhost", Protocol.DEFAULT_PORT + 2));
-    Sharded<Jedis, JedisShardInfo> sharded2 = new Sharded<Jedis, JedisShardInfo>(otherShards,
+    Sharded<CuckooJedis, JedisShardInfo> sharded2 = new Sharded<CuckooJedis, JedisShardInfo>(otherShards,
         Hashing.MURMUR_HASH);
 
     for (int i = 0; i < 1000; i++) {
@@ -290,14 +287,14 @@ public class ShardedJedisTest {
     shards.add(new JedisShardInfo("localhost", Protocol.DEFAULT_PORT, "HOST1:1234"));
     shards.add(new JedisShardInfo("localhost", Protocol.DEFAULT_PORT + 1, "HOST2:1234"));
     shards.add(new JedisShardInfo("localhost", Protocol.DEFAULT_PORT + 2, "HOST3:1234"));
-    Sharded<Jedis, JedisShardInfo> sharded = new Sharded<Jedis, JedisShardInfo>(shards,
+    Sharded<CuckooJedis, JedisShardInfo> sharded = new Sharded<CuckooJedis, JedisShardInfo>(shards,
         Hashing.MURMUR_HASH);
 
     List<JedisShardInfo> otherShards = new ArrayList<JedisShardInfo>(3);
     otherShards.add(new JedisShardInfo("otherhost", Protocol.DEFAULT_PORT, "HOST2:1234"));
     otherShards.add(new JedisShardInfo("otherhost", Protocol.DEFAULT_PORT + 1, "HOST3:1234"));
     otherShards.add(new JedisShardInfo("otherhost", Protocol.DEFAULT_PORT + 2, "HOST1:1234"));
-    Sharded<Jedis, JedisShardInfo> sharded2 = new Sharded<Jedis, JedisShardInfo>(otherShards,
+    Sharded<CuckooJedis, JedisShardInfo> sharded2 = new Sharded<CuckooJedis, JedisShardInfo>(otherShards,
         Hashing.MURMUR_HASH);
 
     for (int i = 0; i < 1000; i++) {
@@ -322,8 +319,8 @@ public class ShardedJedisTest {
       jedisShard.close();
     }
 
-    for (Jedis jedis : jedisShard.getAllShards()) {
-      assertTrue(!jedis.isConnected());
+    for (CuckooJedis cuckooJedis : jedisShard.getAllShards()) {
+      assertTrue(!cuckooJedis.isConnected());
     }
   }
 
@@ -344,12 +341,12 @@ public class ShardedJedisTest {
     JedisShardInfo s2 = jedis.getShardInfo("b");
     jedis.disconnect();
 
-    Jedis j = new Jedis(s1);
+    CuckooJedis j = new CuckooJedis(s1);
     j.auth("foobared");
     assertEquals("bar", j.get("a"));
     j.disconnect();
 
-    j = new Jedis(s2);
+    j = new CuckooJedis(s2);
     j.auth("foobared");
     assertEquals("bar1", j.get("b"));
     j.disconnect();

@@ -562,7 +562,7 @@ public abstract class MultiKeyPipelineBase extends PipelineBase implements
 
   @Override
   public Response<Object> eval(String script, List<String> keys, List<String> args) {
-    String[] argv = Jedis.getParams(keys, args);
+    String[] argv = CuckooJedis.getParams(keys, args);
     return this.eval(script, keys.size(), argv);
   }
 
@@ -579,7 +579,7 @@ public abstract class MultiKeyPipelineBase extends PipelineBase implements
 
   @Override
   public Response<Object> evalsha(String sha1, List<String> keys, List<String> args) {
-    String[] argv = Jedis.getParams(keys, args);
+    String[] argv = CuckooJedis.getParams(keys, args);
     return this.evalsha(sha1, keys.size(), argv);
   }
 

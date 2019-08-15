@@ -15,15 +15,15 @@ import java.util.concurrent.TimeUnit;
 import org.junit.Test;
 
 import redis.clients.jedis.DebugParams;
-import redis.clients.jedis.Jedis;
+import redis.clients.jedis.CuckooJedis;
 import redis.clients.jedis.JedisMonitor;
 import redis.clients.jedis.exceptions.JedisDataException;
 
-public class ControlCommandsTest extends JedisCommandTestBase {
+public class ControlCommandsTest extends CuckooJedisCommandTestBase {
   @Test
   public void save() {
     try {
-      String status = jedis.save();
+      String status = cuckooJedis.save();
       assertEquals("OK", status);
     } catch (JedisDataException e) {
       assertTrue("ERR Background save already in progress".equalsIgnoreCase(e.getMessage()));
@@ -33,7 +33,7 @@ public class ControlCommandsTest extends JedisCommandTestBase {
   @Test
   public void bgsave() {
     try {
-      String status = jedis.bgsave();
+      String status = cuckooJedis.bgsave();
       assertEquals("Background saving started", status);
     } catch (JedisDataException e) {
       assertTrue("ERR Background save already in progress".equalsIgnoreCase(e.getMessage()));
@@ -45,7 +45,7 @@ public class ControlCommandsTest extends JedisCommandTestBase {
     String scheduled = "Background append only file rewriting scheduled";
     String started = "Background append only file rewriting started";
 
-    String status = jedis.bgrewriteaof();
+    String status = cuckooJedis.bgrewriteaof();
 
     boolean ok = status.equals(scheduled) || status.equals(started);
     assertTrue(ok);
@@ -53,22 +53,22 @@ public class ControlCommandsTest extends JedisCommandTestBase {
 
   @Test
   public void lastsave() throws InterruptedException {
-    long saved = jedis.lastsave();
+    long saved = cuckooJedis.lastsave();
     assertTrue(saved > 0);
   }
 
   @Test
   public void info() {
-    String info = jedis.info();
+    String info = cuckooJedis.info();
     assertNotNull(info);
-    info = jedis.info("server");
+    info = cuckooJedis.info("server");
     assertNotNull(info);
   }
 
   @Test
   public void readonly() {
     try {
-      jedis.readonly();
+      cuckooJedis.readonly();
     } catch (JedisDataException e) {
       assertTrue("ERR This instance has cluster support disabled".equalsIgnoreCase(e.getMessage()));
     }
@@ -84,7 +84,7 @@ public class ControlCommandsTest extends JedisCommandTestBase {
           Thread.sleep(100);
         } catch (InterruptedException e) {
         }
-        Jedis j = new Jedis("localhost");
+        CuckooJedis j = new CuckooJedis("localhost");
         j.auth("foobared");
         for (int i = 0; i < 5; i++) {
           j.incr("foobared");
@@ -93,7 +93,7 @@ public class ControlCommandsTest extends JedisCommandTestBase {
       }
     }).start();
 
-    jedis.monitor(new JedisMonitor() {
+    cuckooJedis.monitor(new JedisMonitor() {
       private int count = 0;
 
       @Override
@@ -110,36 +110,36 @@ public class ControlCommandsTest extends JedisCommandTestBase {
 
   @Test
   public void configGet() {
-    List<String> info = jedis.configGet("m*");
+    List<String> info = cuckooJedis.configGet("m*");
     assertNotNull(info);
   }
 
   @Test
   public void configSet() {
-    List<String> info = jedis.configGet("maxmemory");
+    List<String> info = cuckooJedis.configGet("maxmemory");
     String memory = info.get(1);
-    String status = jedis.configSet("maxmemory", "200");
+    String status = cuckooJedis.configSet("maxmemory", "200");
     assertEquals("OK", status);
-    jedis.configSet("maxmemory", memory);
+    cuckooJedis.configSet("maxmemory", memory);
   }
 
   @Test
   public void sync() {
-    jedis.sync();
+    cuckooJedis.sync();
   }
 
   @Test
   public void debug() {
-    jedis.set("foo", "bar");
-    String resp = jedis.debug(DebugParams.OBJECT("foo"));
+    cuckooJedis.set("foo", "bar");
+    String resp = cuckooJedis.debug(DebugParams.OBJECT("foo"));
     assertNotNull(resp);
-    resp = jedis.debug(DebugParams.RELOAD());
+    resp = cuckooJedis.debug(DebugParams.RELOAD());
     assertNotNull(resp);
   }
 
   @Test
   public void waitReplicas() {
-    Long replicas = jedis.waitReplicas(1, 100);
+    Long replicas = cuckooJedis.waitReplicas(1, 100);
     assertEquals(1, replicas.longValue());
   }
 
@@ -147,17 +147,17 @@ public class ControlCommandsTest extends JedisCommandTestBase {
   public void clientPause() throws InterruptedException, ExecutionException {
     ExecutorService executorService = Executors.newFixedThreadPool(2);
     try {
-      final Jedis jedisToPause1 = createJedis();
-      final Jedis jedisToPause2 = createJedis();
+      final CuckooJedis cuckooJedisToPause1 = createJedis();
+      final CuckooJedis cuckooJedisToPause2 = createJedis();
 
       int pauseMillis = 1250;
-      jedis.clientPause(pauseMillis);
+      cuckooJedis.clientPause(pauseMillis);
 
       Future<Long> latency1 = executorService.submit(new Callable<Long>() {
         @Override
         public Long call() throws Exception {
           long startMillis = System.currentTimeMillis();
-          assertEquals("PONG", jedisToPause1.ping());
+          assertEquals("PONG", cuckooJedisToPause1.ping());
           return System.currentTimeMillis() - startMillis;
         }
       });
@@ -165,7 +165,7 @@ public class ControlCommandsTest extends JedisCommandTestBase {
         @Override
         public Long call() throws Exception {
           long startMillis = System.currentTimeMillis();
-          assertEquals("PONG", jedisToPause2.ping());
+          assertEquals("PONG", cuckooJedisToPause2.ping());
           return System.currentTimeMillis() - startMillis;
         }
       });
@@ -177,8 +177,8 @@ public class ControlCommandsTest extends JedisCommandTestBase {
       assertTrue(pauseMillis <= latencyMillis1 && latencyMillis1 <= pauseMillis + pauseMillisDelta);
       assertTrue(pauseMillis <= latencyMillis2 && latencyMillis2 <= pauseMillis + pauseMillisDelta);
 
-      jedisToPause1.close();
-      jedisToPause2.close();
+      cuckooJedisToPause1.close();
+      cuckooJedisToPause2.close();
     } finally {
       executorService.shutdown();
       if (!executorService.awaitTermination(5, TimeUnit.SECONDS)) {
@@ -189,13 +189,13 @@ public class ControlCommandsTest extends JedisCommandTestBase {
 
   @Test
   public void memoryDoctorString() {
-    String memoryInfo = jedis.memoryDoctor();
+    String memoryInfo = cuckooJedis.memoryDoctor();
     assertNotNull(memoryInfo);
   }
 
   @Test
   public void memoryDoctorBinary() {
-    byte[] memoryInfo = jedis.memoryDoctorBinary();
+    byte[] memoryInfo = cuckooJedis.memoryDoctorBinary();
     assertNotNull(memoryInfo);
   }
 }

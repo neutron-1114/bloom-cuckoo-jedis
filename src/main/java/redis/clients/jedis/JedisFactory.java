@@ -18,7 +18,7 @@ import redis.clients.jedis.util.JedisURIHelper;
 /**
  * PoolableObjectFactory custom impl.
  */
-class JedisFactory implements PooledObjectFactory<Jedis> {
+class JedisFactory implements PooledObjectFactory<CuckooJedis> {
   private final AtomicReference<HostAndPort> hostAndPort = new AtomicReference<HostAndPort>();
   private final int connectionTimeout;
   private final int soTimeout;
@@ -82,7 +82,7 @@ class JedisFactory implements PooledObjectFactory<Jedis> {
   }
 
   @Override
-  public void activateObject(PooledObject<Jedis> pooledJedis) throws Exception {
+  public void activateObject(PooledObject<CuckooJedis> pooledJedis) throws Exception {
     final BinaryJedis jedis = pooledJedis.getObject();
     if (jedis.getDB() != database) {
       jedis.select(database);
@@ -91,7 +91,7 @@ class JedisFactory implements PooledObjectFactory<Jedis> {
   }
 
   @Override
-  public void destroyObject(PooledObject<Jedis> pooledJedis) throws Exception {
+  public void destroyObject(PooledObject<CuckooJedis> pooledJedis) throws Exception {
     final BinaryJedis jedis = pooledJedis.getObject();
     if (jedis.isConnected()) {
       try {
@@ -108,38 +108,38 @@ class JedisFactory implements PooledObjectFactory<Jedis> {
   }
 
   @Override
-  public PooledObject<Jedis> makeObject() throws Exception {
+  public PooledObject<CuckooJedis> makeObject() throws Exception {
     final HostAndPort hostAndPort = this.hostAndPort.get();
-    final Jedis jedis = new Jedis(hostAndPort.getHost(), hostAndPort.getPort(), connectionTimeout,
+    final CuckooJedis cuckooJedis = new CuckooJedis(hostAndPort.getHost(), hostAndPort.getPort(), connectionTimeout,
         soTimeout, ssl, sslSocketFactory, sslParameters, hostnameVerifier);
 
     try {
-      jedis.connect();
+      cuckooJedis.connect();
       if (password != null) {
-        jedis.auth(password);
+        cuckooJedis.auth(password);
       }
       if (database != 0) {
-        jedis.select(database);
+        cuckooJedis.select(database);
       }
       if (clientName != null) {
-        jedis.clientSetname(clientName);
+        cuckooJedis.clientSetname(clientName);
       }
     } catch (JedisException je) {
-      jedis.close();
+      cuckooJedis.close();
       throw je;
     }
 
-    return new DefaultPooledObject<Jedis>(jedis);
+    return new DefaultPooledObject<CuckooJedis>(cuckooJedis);
 
   }
 
   @Override
-  public void passivateObject(PooledObject<Jedis> pooledJedis) throws Exception {
+  public void passivateObject(PooledObject<CuckooJedis> pooledJedis) throws Exception {
     // TODO maybe should select db 0? Not sure right now.
   }
 
   @Override
-  public boolean validateObject(PooledObject<Jedis> pooledJedis) {
+  public boolean validateObject(PooledObject<CuckooJedis> pooledJedis) {
     final BinaryJedis jedis = pooledJedis.getObject();
     try {
       HostAndPort hostAndPort = this.hostAndPort.get();

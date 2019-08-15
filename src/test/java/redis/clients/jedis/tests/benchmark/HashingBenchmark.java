@@ -7,8 +7,8 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.List;
 
+import redis.clients.jedis.CuckooJedis;
 import redis.clients.jedis.HostAndPort;
-import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisShardInfo;
 import redis.clients.jedis.ShardedJedis;
 import redis.clients.jedis.tests.HostAndPortUtil;
@@ -27,8 +27,8 @@ public class HashingBenchmark {
     shard.setPassword("foobared");
     shards.add(shard);
     ShardedJedis jedis = new ShardedJedis(shards);
-    Collection<Jedis> allShards = jedis.getAllShards();
-    for (Jedis j : allShards) {
+    Collection<CuckooJedis> allShards = jedis.getAllShards();
+    for (CuckooJedis j : allShards) {
       j.flushAll();
     }
 

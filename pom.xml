@@ -8,11 +8,11 @@
 	<modelVersion>4.0.0</modelVersion>
 	<packaging>jar</packaging>
 	<groupId>redis.clients</groupId>
-	<artifactId>jedis</artifactId>
-	<version>bloom</version>
+	<artifactId>cuckoo-Jedis</artifactId>
+	<version>0.0.1</version>
 	<name>Jedis</name>
 	<description>Jedis is a blazingly small and sane Redis java client.</description>
-  <url>https://github.com/xetorthio/jedis</url>
+  <url>https://github.com/xetorthio/cuckooJedis</url>
 
 	<mailingLists>
 		<mailingList>
@@ -27,21 +27,21 @@
 	<licenses>
 		<license>
 			<name>MIT</name>
-			<url>http://github.com/xetorthio/jedis/raw/master/LICENSE.txt</url>
+			<url>http://github.com/xetorthio/cuckooJedis/raw/master/LICENSE.txt</url>
 			<distribution>repo</distribution>
 		</license>
 	</licenses>
 
 	<issueManagement>
 		<system>github</system>
-		<url>http://github.com/xetorthio/jedis/issues</url>
+		<url>http://github.com/xetorthio/cuckooJedis/issues</url>
 	</issueManagement>
 
   <scm>
-    <connection>scm:git:git@github.com:xetorthio/jedis.git</connection>
-    <url>scm:git:git@github.com:xetorthio/jedis.git</url>
-    <developerConnection>scm:git:git@github.com:xetorthio/jedis.git</developerConnection>
-    <tag>jedis-2.2.0</tag>
+    <connection>scm:git:git@github.com:xetorthio/cuckooJedis.git</connection>
+    <url>scm:git:git@github.com:xetorthio/cuckooJedis.git</url>
+    <developerConnection>scm:git:git@github.com:xetorthio/cuckooJedis.git</developerConnection>
+    <tag>cuckooJedis-2.2.0</tag>
   </scm>
 
 	<properties>

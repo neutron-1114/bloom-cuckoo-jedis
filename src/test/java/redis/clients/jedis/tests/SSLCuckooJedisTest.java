@@ -29,11 +29,11 @@ import javax.net.ssl.X509TrustManager;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import redis.clients.jedis.Jedis;
+import redis.clients.jedis.CuckooJedis;
 import redis.clients.jedis.JedisShardInfo;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 
-public class SSLJedisTest {
+public class SSLCuckooJedisTest {
 
   @BeforeClass
   public static void setupTrustStore() {
@@ -52,11 +52,11 @@ public class SSLJedisTest {
    */
   @Test
   public void connectWithUrl() {
-    // The "rediss" scheme instructs jedis to open a SSL/TLS connection.
-    Jedis jedis = new Jedis("rediss://localhost:6390");
-    jedis.auth("foobared");
-    assertEquals("PONG", jedis.ping());
-    jedis.close();
+    // The "rediss" scheme instructs cuckooJedis to open a SSL/TLS connection.
+    CuckooJedis cuckooJedis = new CuckooJedis("rediss://localhost:6390");
+    cuckooJedis.auth("foobared");
+    assertEquals("PONG", cuckooJedis.ping());
+    cuckooJedis.close();
   }
 
   /**
@@ -64,11 +64,11 @@ public class SSLJedisTest {
    */
   @Test
   public void connectWithoutShardInfo() {
-    // The "rediss" scheme instructs jedis to open a SSL/TLS connection.
-    Jedis jedis = new Jedis(URI.create("rediss://localhost:6390"));
-    jedis.auth("foobared");
-    assertEquals("PONG", jedis.ping());
-    jedis.close();
+    // The "rediss" scheme instructs cuckooJedis to open a SSL/TLS connection.
+    CuckooJedis cuckooJedis = new CuckooJedis(URI.create("rediss://localhost:6390"));
+    cuckooJedis.auth("foobared");
+    assertEquals("PONG", cuckooJedis.ping());
+    cuckooJedis.close();
   }
 
   /**
@@ -90,10 +90,10 @@ public class SSLJedisTest {
     JedisShardInfo shardInfo = new JedisShardInfo(uri, sslSocketFactory, sslParameters, null);
     shardInfo.setPassword("foobared");
 
-    Jedis jedis = new Jedis(shardInfo);
-    assertEquals("PONG", jedis.ping());
-    jedis.disconnect();
-    jedis.close();
+    CuckooJedis cuckooJedis = new CuckooJedis(shardInfo);
+    assertEquals("PONG", cuckooJedis.ping());
+    cuckooJedis.disconnect();
+    cuckooJedis.close();
   }
 
   /**
@@ -119,9 +119,9 @@ public class SSLJedisTest {
     JedisShardInfo shardInfo = new JedisShardInfo(uri, sslSocketFactory, sslParameters, null);
     shardInfo.setPassword("foobared");
 
-    Jedis jedis = new Jedis(shardInfo);
+    CuckooJedis cuckooJedis = new CuckooJedis(shardInfo);
     try {
-      assertEquals("PONG", jedis.ping());
+      assertEquals("PONG", cuckooJedis.ping());
       fail("The code did not throw the expected JedisConnectionException.");
     } catch (JedisConnectionException e) {
       assertEquals("Unexpected first inner exception.",
@@ -131,7 +131,7 @@ public class SSLJedisTest {
     }
 
     try {
-      jedis.close();
+      cuckooJedis.close();
     } catch (Throwable e1) {
       // Expected.
     }
@@ -151,10 +151,10 @@ public class SSLJedisTest {
     JedisShardInfo shardInfo = new JedisShardInfo(uri, sslSocketFactory, sslParameters, hostnameVerifier);
     shardInfo.setPassword("foobared");
 
-    Jedis jedis = new Jedis(shardInfo);
-    assertEquals("PONG", jedis.ping());
-    jedis.disconnect();
-    jedis.close();
+    CuckooJedis cuckooJedis = new CuckooJedis(shardInfo);
+    assertEquals("PONG", cuckooJedis.ping());
+    cuckooJedis.disconnect();
+    cuckooJedis.close();
   }
 
   /**
@@ -170,10 +170,10 @@ public class SSLJedisTest {
     JedisShardInfo shardInfo = new JedisShardInfo(uri, sslSocketFactory, sslParameters, hostnameVerifier);
     shardInfo.setPassword("foobared");
 
-    Jedis jedis = new Jedis(shardInfo);
-    assertEquals("PONG", jedis.ping());
-    jedis.disconnect();
-    jedis.close();
+    CuckooJedis cuckooJedis = new CuckooJedis(shardInfo);
+    assertEquals("PONG", cuckooJedis.ping());
+    cuckooJedis.disconnect();
+    cuckooJedis.close();
   }
 
   /**
@@ -192,9 +192,9 @@ public class SSLJedisTest {
     JedisShardInfo shardInfo = new JedisShardInfo(uri, sslSocketFactory, sslParameters, hostnameVerifier);
     shardInfo.setPassword("foobared");
 
-    Jedis jedis = new Jedis(shardInfo);
+    CuckooJedis cuckooJedis = new CuckooJedis(shardInfo);
     try {
-      assertEquals("PONG", jedis.ping());
+      assertEquals("PONG", cuckooJedis.ping());
       fail("The code did not throw the expected JedisConnectionException.");
     } catch (JedisConnectionException e) {
       assertEquals("The JedisConnectionException does not contain the expected message.",
@@ -202,7 +202,7 @@ public class SSLJedisTest {
     }
 
     try {
-      jedis.close();
+      cuckooJedis.close();
     } catch (Throwable e1) {
       // Expected.
     }
@@ -224,9 +224,9 @@ public class SSLJedisTest {
     JedisShardInfo shardInfo = new JedisShardInfo(uri, sslSocketFactory, null, null);
     shardInfo.setPassword("foobared");
 
-    Jedis jedis = new Jedis(shardInfo);
+    CuckooJedis cuckooJedis = new CuckooJedis(shardInfo);
     try {
-      assertEquals("PONG", jedis.ping());
+      assertEquals("PONG", cuckooJedis.ping());
       fail("The code did not throw the expected JedisConnectionException.");
     } catch (JedisConnectionException e) {
       assertEquals("Unexpected first inner exception.", SSLException.class,
@@ -238,7 +238,7 @@ public class SSLJedisTest {
     }
 
     try {
-      jedis.close();
+      cuckooJedis.close();
     } catch (Throwable e1) {
       // Expected.
     }

@@ -30,24 +30,19 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import redis.clients.jedis.HostAndPort;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisCluster;
-import redis.clients.jedis.ClusterReset;
-import redis.clients.jedis.JedisClusterInfoCache;
-import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.JedisPoolConfig;
+import redis.clients.jedis.*;
+import redis.clients.jedis.CuckooJedis;
 import redis.clients.jedis.exceptions.*;
 import redis.clients.jedis.tests.utils.ClientKillerUtil;
 import redis.clients.jedis.tests.utils.JedisClusterTestUtil;
 import redis.clients.jedis.util.JedisClusterCRC16;
 
-public class JedisClusterTest {
-  private static Jedis node1;
-  private static Jedis node2;
-  private static Jedis node3;
-  private static Jedis node4;
-  private static Jedis nodeSlave2;
+public class CuckooJedisClusterTest {
+  private static CuckooJedis node1;
+  private static CuckooJedis node2;
+  private static CuckooJedis node3;
+  private static CuckooJedis node4;
+  private static CuckooJedis nodeSlave2;
   private String localHost = "127.0.0.1";
 
   private static final int DEFAULT_TIMEOUT = 2000;
@@ -63,23 +58,23 @@ public class JedisClusterTest {
 
   @Before
   public void setUp() throws InterruptedException {
-    node1 = new Jedis(nodeInfo1);
+    node1 = new CuckooJedis(nodeInfo1);
     node1.auth("cluster");
     node1.flushAll();
 
-    node2 = new Jedis(nodeInfo2);
+    node2 = new CuckooJedis(nodeInfo2);
     node2.auth("cluster");
     node2.flushAll();
 
-    node3 = new Jedis(nodeInfo3);
+    node3 = new CuckooJedis(nodeInfo3);
     node3.auth("cluster");
     node3.flushAll();
 
-    node4 = new Jedis(nodeInfo4);
+    node4 = new CuckooJedis(nodeInfo4);
     node4.auth("cluster");
     node4.flushAll();
 
-    nodeSlave2 = new Jedis(nodeInfoSlave2);
+    nodeSlave2 = new CuckooJedis(nodeInfoSlave2);
     nodeSlave2.auth("cluster");
     nodeSlave2.flushAll();
     // ---- configure cluster
@@ -172,14 +167,14 @@ public class JedisClusterTest {
     String clientName = "myAppName";
     JedisCluster jc = new JedisCluster(jedisClusterNode, DEFAULT_TIMEOUT, DEFAULT_TIMEOUT,
         DEFAULT_REDIRECTIONS, "cluster", clientName, DEFAULT_CONFIG);
-    Map<String, JedisPool> clusterNodes = jc.getClusterNodes();
-    Collection<JedisPool> values = clusterNodes.values();
-    for (JedisPool jedisPool : values) {
-      Jedis jedis = jedisPool.getResource();
+    Map<String, CuckooJedisPool> clusterNodes = jc.getClusterNodes();
+    Collection<CuckooJedisPool> values = clusterNodes.values();
+    for (CuckooJedisPool cuckooJedisPool : values) {
+      CuckooJedis cuckooJedis = cuckooJedisPool.getResource();
       try {
-        assertEquals(clientName, jedis.clientGetname());
+        assertEquals(clientName, cuckooJedis.clientGetname());
       } finally {
-        jedis.close();
+        cuckooJedis.close();
       }
     }
   }
@@ -510,9 +505,9 @@ public class JedisClusterTest {
       }
     }
 
-    Iterator<JedisPool> poolIterator = jc.getClusterNodes().values().iterator();
+    Iterator<CuckooJedisPool> poolIterator = jc.getClusterNodes().values().iterator();
     while (poolIterator.hasNext()) {
-      JedisPool pool = poolIterator.next();
+      CuckooJedisPool pool = poolIterator.next();
       try {
         pool.getResource();
         fail("JedisCluster's internal pools should be already destroyed");
@@ -530,11 +525,11 @@ public class JedisClusterTest {
     JedisCluster jc = new JedisCluster(jedisClusterNode, 4000, 4000, DEFAULT_REDIRECTIONS,
         "cluster", DEFAULT_CONFIG);
 
-    for (JedisPool pool : jc.getClusterNodes().values()) {
-      Jedis jedis = pool.getResource();
-      assertEquals(4000, jedis.getClient().getConnectionTimeout());
-      assertEquals(4000, jedis.getClient().getSoTimeout());
-      jedis.close();
+    for (CuckooJedisPool pool : jc.getClusterNodes().values()) {
+      CuckooJedis cuckooJedis = pool.getResource();
+      assertEquals(4000, cuckooJedis.getClient().getConnectionTimeout());
+      assertEquals(4000, cuckooJedis.getClient().getSoTimeout());
+      cuckooJedis.close();
     }
   }
 
@@ -578,7 +573,7 @@ public class JedisClusterTest {
     JedisCluster jc = new JedisCluster(jedisClusterNode, DEFAULT_TIMEOUT, DEFAULT_TIMEOUT,
         DEFAULT_REDIRECTIONS, "cluster", config);
 
-    Jedis j = jc.getClusterNodes().get("127.0.0.1:7380").getResource();
+    CuckooJedis j = jc.getClusterNodes().get("127.0.0.1:7380").getResource();
     ClientKillerUtil.tagClient(j, "DEAD");
     ClientKillerUtil.killClient(j, "DEAD");
     j.close();
@@ -611,7 +606,7 @@ public class JedisClusterTest {
     config.setMaxTotal(1);
     JedisCluster jc = new JedisCluster(jedisClusterNode, 0, 2, DEFAULT_REDIRECTIONS, "cluster",
         DEFAULT_CONFIG);
-    Map<String, JedisPool> clusterNodes = jc.getClusterNodes();
+    Map<String, CuckooJedisPool> clusterNodes = jc.getClusterNodes();
     assertEquals(3, clusterNodes.size());
     assertFalse(clusterNodes.containsKey(JedisClusterInfoCache.getNodeKey(localhost)));
   }
@@ -626,7 +621,7 @@ public class JedisClusterTest {
     config.setMaxTotal(1);
     JedisCluster jc = new JedisCluster(jedisClusterNode, 0, 2, DEFAULT_REDIRECTIONS, "cluster",
         config);
-    Map<String, JedisPool> clusterNodes = jc.getClusterNodes();
+    Map<String, CuckooJedisPool> clusterNodes = jc.getClusterNodes();
     assertEquals(3, clusterNodes.size());
     assertFalse(clusterNodes.containsKey(JedisClusterInfoCache.getNodeKey(invalidHost)));
   }
@@ -699,7 +694,7 @@ public class JedisClusterTest {
     return null;
   }
 
-  private void assertNodeHandshakeEnded(Jedis node, int timeoutMs) {
+  private void assertNodeHandshakeEnded(CuckooJedis node, int timeoutMs) {
     int sleepInterval = 100;
     for (int sleepTime = 0; sleepTime <= timeoutMs; sleepTime += sleepInterval) {
       boolean isHandshaking = isAnyNodeHandshaking(node);
@@ -714,7 +709,7 @@ public class JedisClusterTest {
     throw new JedisException("Node handshaking is not ended");
   }
 
-  private boolean isAnyNodeHandshaking(Jedis node) {
+  private boolean isAnyNodeHandshaking(CuckooJedis node) {
     String infoOutput = node.clusterNodes();
     for (String infoLine : infoOutput.split("\n")) {
       if (infoLine.contains("handshake")) {

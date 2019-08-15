@@ -13,19 +13,19 @@ import redis.clients.jedis.util.SafeEncoder;
 
 import java.util.List;
 
-public class BitCommandsTest extends JedisCommandTestBase {
+public class BitCommandsTest extends CuckooJedisCommandTestBase {
   @Test
   public void setAndgetbit() {
-    boolean bit = jedis.setbit("foo", 0, true);
+    boolean bit = cuckooJedis.setbit("foo", 0, true);
     assertEquals(false, bit);
 
-    bit = jedis.getbit("foo", 0);
+    bit = cuckooJedis.getbit("foo", 0);
     assertEquals(true, bit);
 
-    boolean bbit = jedis.setbit("bfoo".getBytes(), 0, "1".getBytes());
+    boolean bbit = cuckooJedis.setbit("bfoo".getBytes(), 0, "1".getBytes());
     assertFalse(bbit);
 
-    bbit = jedis.getbit("bfoo".getBytes(), 0);
+    bbit = cuckooJedis.getbit("bfoo".getBytes(), 0);
     assertTrue(bbit);
   }
 
@@ -33,32 +33,32 @@ public class BitCommandsTest extends JedisCommandTestBase {
   public void bitpos() {
     String foo = "foo";
 
-    jedis.set(foo, String.valueOf(0));
+    cuckooJedis.set(foo, String.valueOf(0));
 
-    jedis.setbit(foo, 3, true);
-    jedis.setbit(foo, 7, true);
-    jedis.setbit(foo, 13, true);
-    jedis.setbit(foo, 39, true);
+    cuckooJedis.setbit(foo, 3, true);
+    cuckooJedis.setbit(foo, 7, true);
+    cuckooJedis.setbit(foo, 13, true);
+    cuckooJedis.setbit(foo, 39, true);
 
     /*
      * byte: 0 1 2 3 4 bit: 00010001 / 00000100 / 00000000 / 00000000 / 00000001
      */
-    long offset = jedis.bitpos(foo, true);
+    long offset = cuckooJedis.bitpos(foo, true);
     assertEquals(2, offset);
-    offset = jedis.bitpos(foo, false);
+    offset = cuckooJedis.bitpos(foo, false);
     assertEquals(0, offset);
 
-    offset = jedis.bitpos(foo, true, new BitPosParams(1));
+    offset = cuckooJedis.bitpos(foo, true, new BitPosParams(1));
     assertEquals(13, offset);
-    offset = jedis.bitpos(foo, false, new BitPosParams(1));
+    offset = cuckooJedis.bitpos(foo, false, new BitPosParams(1));
     assertEquals(8, offset);
 
-    offset = jedis.bitpos(foo, true, new BitPosParams(2, 3));
+    offset = cuckooJedis.bitpos(foo, true, new BitPosParams(2, 3));
     assertEquals(-1, offset);
-    offset = jedis.bitpos(foo, false, new BitPosParams(2, 3));
+    offset = cuckooJedis.bitpos(foo, false, new BitPosParams(2, 3));
     assertEquals(16, offset);
 
-    offset = jedis.bitpos(foo, true, new BitPosParams(3, 4));
+    offset = cuckooJedis.bitpos(foo, true, new BitPosParams(3, 4));
     assertEquals(39, offset);
   }
 
@@ -67,32 +67,32 @@ public class BitCommandsTest extends JedisCommandTestBase {
     // binary
     byte[] bfoo = { 0x01, 0x02, 0x03, 0x04 };
 
-    jedis.set(bfoo, Protocol.toByteArray(0));
+    cuckooJedis.set(bfoo, Protocol.toByteArray(0));
 
-    jedis.setbit(bfoo, 3, true);
-    jedis.setbit(bfoo, 7, true);
-    jedis.setbit(bfoo, 13, true);
-    jedis.setbit(bfoo, 39, true);
+    cuckooJedis.setbit(bfoo, 3, true);
+    cuckooJedis.setbit(bfoo, 7, true);
+    cuckooJedis.setbit(bfoo, 13, true);
+    cuckooJedis.setbit(bfoo, 39, true);
 
     /*
      * byte: 0 1 2 3 4 bit: 00010001 / 00000100 / 00000000 / 00000000 / 00000001
      */
-    long offset = jedis.bitpos(bfoo, true);
+    long offset = cuckooJedis.bitpos(bfoo, true);
     assertEquals(2, offset);
-    offset = jedis.bitpos(bfoo, false);
+    offset = cuckooJedis.bitpos(bfoo, false);
     assertEquals(0, offset);
 
-    offset = jedis.bitpos(bfoo, true, new BitPosParams(1));
+    offset = cuckooJedis.bitpos(bfoo, true, new BitPosParams(1));
     assertEquals(13, offset);
-    offset = jedis.bitpos(bfoo, false, new BitPosParams(1));
+    offset = cuckooJedis.bitpos(bfoo, false, new BitPosParams(1));
     assertEquals(8, offset);
 
-    offset = jedis.bitpos(bfoo, true, new BitPosParams(2, 3));
+    offset = cuckooJedis.bitpos(bfoo, true, new BitPosParams(2, 3));
     assertEquals(-1, offset);
-    offset = jedis.bitpos(bfoo, false, new BitPosParams(2, 3));
+    offset = cuckooJedis.bitpos(bfoo, false, new BitPosParams(2, 3));
     assertEquals(16, offset);
 
-    offset = jedis.bitpos(bfoo, true, new BitPosParams(3, 4));
+    offset = cuckooJedis.bitpos(bfoo, true, new BitPosParams(3, 4));
     assertEquals(39, offset);
   }
 
@@ -100,15 +100,15 @@ public class BitCommandsTest extends JedisCommandTestBase {
   public void bitposWithNoMatchingBitExist() {
     String foo = "foo";
 
-    jedis.set(foo, String.valueOf(0));
+    cuckooJedis.set(foo, String.valueOf(0));
     for (int idx = 0; idx < 8; idx++) {
-      jedis.setbit(foo, idx, true);
+      cuckooJedis.setbit(foo, idx, true);
     }
 
     /*
      * byte: 0 bit: 11111111
      */
-    long offset = jedis.bitpos(foo, false);
+    long offset = cuckooJedis.bitpos(foo, false);
     // offset should be last index + 1
     assertEquals(8, offset);
   }
@@ -117,89 +117,89 @@ public class BitCommandsTest extends JedisCommandTestBase {
   public void bitposWithNoMatchingBitExistWithinRange() {
     String foo = "foo";
 
-    jedis.set(foo, String.valueOf(0));
+    cuckooJedis.set(foo, String.valueOf(0));
     for (int idx = 0; idx < 8 * 5; idx++) {
-      jedis.setbit(foo, idx, true);
+      cuckooJedis.setbit(foo, idx, true);
     }
 
     /*
      * byte: 0 1 2 3 4 bit: 11111111 / 11111111 / 11111111 / 11111111 / 11111111
      */
-    long offset = jedis.bitpos(foo, false, new BitPosParams(2, 3));
+    long offset = cuckooJedis.bitpos(foo, false, new BitPosParams(2, 3));
     // offset should be -1
     assertEquals(-1, offset);
   }
 
   @Test
   public void setAndgetrange() {
-    jedis.set("key1", "Hello World");
-    long reply = jedis.setrange("key1", 6, "Jedis");
+    cuckooJedis.set("key1", "Hello World");
+    long reply = cuckooJedis.setrange("key1", 6, "CuckooJedis");
     assertEquals(11, reply);
 
-    assertEquals("Hello Jedis", jedis.get("key1"));
+    assertEquals("Hello CuckooJedis", cuckooJedis.get("key1"));
 
-    assertEquals("Hello", jedis.getrange("key1", 0, 4));
-    assertEquals("Jedis", jedis.getrange("key1", 6, 11));
+    assertEquals("Hello", cuckooJedis.getrange("key1", 0, 4));
+    assertEquals("CuckooJedis", cuckooJedis.getrange("key1", 6, 11));
   }
 
   @Test
   public void bitCount() {
-    jedis.setbit("foo", 16, true);
-    jedis.setbit("foo", 24, true);
-    jedis.setbit("foo", 40, true);
-    jedis.setbit("foo", 56, true);
+    cuckooJedis.setbit("foo", 16, true);
+    cuckooJedis.setbit("foo", 24, true);
+    cuckooJedis.setbit("foo", 40, true);
+    cuckooJedis.setbit("foo", 56, true);
 
-    long c4 = jedis.bitcount("foo");
+    long c4 = cuckooJedis.bitcount("foo");
     assertEquals(4, c4);
 
-    long c3 = jedis.bitcount("foo", 2L, 5L);
+    long c3 = cuckooJedis.bitcount("foo", 2L, 5L);
     assertEquals(3, c3);
   }
 
   @Test
   public void bitOp() {
-    jedis.set("key1", "\u0060");
-    jedis.set("key2", "\u0044");
+    cuckooJedis.set("key1", "\u0060");
+    cuckooJedis.set("key2", "\u0044");
 
-    jedis.bitop(BitOP.AND, "resultAnd", "key1", "key2");
-    String resultAnd = jedis.get("resultAnd");
+    cuckooJedis.bitop(BitOP.AND, "resultAnd", "key1", "key2");
+    String resultAnd = cuckooJedis.get("resultAnd");
     assertEquals("\u0040", resultAnd);
 
-    jedis.bitop(BitOP.OR, "resultOr", "key1", "key2");
-    String resultOr = jedis.get("resultOr");
+    cuckooJedis.bitop(BitOP.OR, "resultOr", "key1", "key2");
+    String resultOr = cuckooJedis.get("resultOr");
     assertEquals("\u0064", resultOr);
 
-    jedis.bitop(BitOP.XOR, "resultXor", "key1", "key2");
-    String resultXor = jedis.get("resultXor");
+    cuckooJedis.bitop(BitOP.XOR, "resultXor", "key1", "key2");
+    String resultXor = cuckooJedis.get("resultXor");
     assertEquals("\u0024", resultXor);
   }
 
   @Test
   public void bitOpNot() {
-    jedis.setbit("key", 0, true);
-    jedis.setbit("key", 4, true);
+    cuckooJedis.setbit("key", 0, true);
+    cuckooJedis.setbit("key", 4, true);
 
-    jedis.bitop(BitOP.NOT, "resultNot", "key");
+    cuckooJedis.bitop(BitOP.NOT, "resultNot", "key");
 
-    String resultNot = jedis.get("resultNot");
+    String resultNot = cuckooJedis.get("resultNot");
     assertEquals("\u0077", resultNot);
   }
 
   @Test(expected = redis.clients.jedis.exceptions.JedisDataException.class)
   public void bitOpNotMultiSourceShouldFail() {
-    jedis.bitop(BitOP.NOT, "dest", "src1", "src2");
+    cuckooJedis.bitop(BitOP.NOT, "dest", "src1", "src2");
   }
 
   @Test
   public void testBitfield() {
-    List<Long> responses = jedis.bitfield("mykey", "INCRBY","i5","100","1", "GET", "u4", "0");
+    List<Long> responses = cuckooJedis.bitfield("mykey", "INCRBY","i5","100","1", "GET", "u4", "0");
     assertEquals(1L, responses.get(0).longValue());
     assertEquals(0L, responses.get(1).longValue());
   }
 
   @Test
   public void testBinaryBitfield() {
-    List<Long> responses = jedis.bitfield(SafeEncoder.encode("mykey"), SafeEncoder.encode("INCRBY"),
+    List<Long> responses = cuckooJedis.bitfield(SafeEncoder.encode("mykey"), SafeEncoder.encode("INCRBY"),
             SafeEncoder.encode("i5"), SafeEncoder.encode("100"), SafeEncoder.encode("1"),
             SafeEncoder.encode("GET"), SafeEncoder.encode("u4"), SafeEncoder.encode("0")
     );

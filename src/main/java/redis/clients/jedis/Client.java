@@ -1264,58 +1264,58 @@ public class Client extends BinaryClient implements Commands {
 
   //tongzi modifiy
   @Override
-  public void cf_reserve(String key, String value) {
-    cf_reserve(SafeEncoder.encode(key), SafeEncoder.encode(value));
+  public void cfreserve(String key, String value) {
+    cfreserve(SafeEncoder.encode(key), SafeEncoder.encode(value));
   }
 
   @Override
-  public void cf_add(final String key, final String value) {
-    cf_add(SafeEncoder.encode(key), SafeEncoder.encode(value));
+  public void cfadd(final String key, final String value) {
+    cfadd(SafeEncoder.encode(key), SafeEncoder.encode(value));
   }
 
   @Override
-  public void cf_addnx(final String key, final String value) {
-    cf_addnx(SafeEncoder.encode(key), SafeEncoder.encode(value));
+  public void cfaddnx(final String key, final String value) {
+    cfaddnx(SafeEncoder.encode(key), SafeEncoder.encode(value));
   }
 
   @Override
-  public void cf_insert(final String key, final String... value) {
-    cf_insert(SafeEncoder.encode(key), SafeEncoder.encodeMany(value));
+  public void cfinsert(final String key, final String... value) {
+    cfinsert(SafeEncoder.encode(key), SafeEncoder.encodeMany(value));
   }
 
   @Override
-  public void cf_insertnx(String key, String... value) {
-    cf_insertnx(SafeEncoder.encode(key), SafeEncoder.encodeMany(value));
+  public void cfinsertnx(String key, String... value) {
+    cfinsertnx(SafeEncoder.encode(key), SafeEncoder.encodeMany(value));
   }
 
   @Override
-  public void cf_exists(final String key, final String value) {
-    cf_exists(SafeEncoder.encode(key), SafeEncoder.encode(value));
+  public void cfexists(final String key, final String value) {
+    cfexists(SafeEncoder.encode(key), SafeEncoder.encode(value));
   }
 
   @Override
-  public void cf_mexists(String key, String... value) {
-    cf_mexists(SafeEncoder.encode(key), SafeEncoder.encodeMany(value));
+  public void cfmexists(String key, String... value) {
+    cfmexists(SafeEncoder.encode(key), SafeEncoder.encodeMany(value));
   }
 
   @Override
-  public void cf_del(String key, String value) {
-    cf_del(SafeEncoder.encode(key), SafeEncoder.encode(value));
+  public void cfdel(String key, String value) {
+    cfdel(SafeEncoder.encode(key), SafeEncoder.encode(value));
   }
 
   @Override
-  public void cf_count(String key, String value) {
-    cf_count(SafeEncoder.encode(key), SafeEncoder.encode(value));
+  public void cfcount(String key, String value) {
+    cfcount(SafeEncoder.encode(key), SafeEncoder.encode(value));
   }
 
   @Override
-  public void cf_scandump(String key, String value) {
-    cf_scandump(SafeEncoder.encode(key), SafeEncoder.encode(value));
+  public void cfscandump(String key, String value) {
+    cfscandump(SafeEncoder.encode(key), SafeEncoder.encode(value));
   }
 
   @Override
-  public void cf_loadchunk(String key, String... value) {
-    cf_loadchunk(SafeEncoder.encode(key), SafeEncoder.encodeMany(value));
+  public void cfloadchunk(String key, byte[][] value) {
+    cfloadchunk(SafeEncoder.encode(key), value);
   }
 
 

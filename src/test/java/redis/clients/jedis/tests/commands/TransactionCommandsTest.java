@@ -18,7 +18,7 @@ import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 
-import redis.clients.jedis.Jedis;
+import redis.clients.jedis.CuckooJedis;
 import redis.clients.jedis.Pipeline;
 import redis.clients.jedis.Protocol.Keyword;
 import redis.clients.jedis.Response;
@@ -26,7 +26,7 @@ import redis.clients.jedis.Transaction;
 import redis.clients.jedis.exceptions.JedisDataException;
 import redis.clients.jedis.util.SafeEncoder;
 
-public class TransactionCommandsTest extends JedisCommandTestBase {
+public class TransactionCommandsTest extends CuckooJedisCommandTestBase {
   final byte[] bfoo = { 0x01, 0x02, 0x03, 0x04 };
   final byte[] bbar = { 0x05, 0x06, 0x07, 0x08 };
   final byte[] ba = { 0x0A };
@@ -34,13 +34,13 @@ public class TransactionCommandsTest extends JedisCommandTestBase {
 
   final byte[] bmykey = { 0x42, 0x02, 0x03, 0x04 };
 
-  Jedis nj;
+  CuckooJedis nj;
 
   @Before
   public void setUp() throws Exception {
     super.setUp();
 
-    nj = new Jedis(hnp.getHost(), hnp.getPort(), 500);
+    nj = new CuckooJedis(hnp.getHost(), hnp.getPort(), 500);
     nj.connect();
     nj.auth("foobared");
     nj.flushAll();
@@ -48,7 +48,7 @@ public class TransactionCommandsTest extends JedisCommandTestBase {
 
   @Test
   public void multi() {
-    Transaction trans = jedis.multi();
+    Transaction trans = cuckooJedis.multi();
 
     trans.sadd("foo", "a");
     trans.sadd("foo", "b");
@@ -63,7 +63,7 @@ public class TransactionCommandsTest extends JedisCommandTestBase {
     assertEquals(expected, response);
 
     // Binary
-    trans = jedis.multi();
+    trans = cuckooJedis.multi();
 
     trans.sadd(bfoo, ba);
     trans.sadd(bfoo, bb);
@@ -81,8 +81,8 @@ public class TransactionCommandsTest extends JedisCommandTestBase {
 
   @Test
   public void watch() throws UnknownHostException, IOException {
-    jedis.watch("mykey", "somekey");
-    Transaction t = jedis.multi();
+    cuckooJedis.watch("mykey", "somekey");
+    Transaction t = cuckooJedis.multi();
 
     nj.connect();
     nj.auth("foobared");
@@ -92,11 +92,11 @@ public class TransactionCommandsTest extends JedisCommandTestBase {
     t.set("mykey", "foo");
     List<Object> resp = t.exec();
     assertNull(resp);
-    assertEquals("bar", jedis.get("mykey"));
+    assertEquals("bar", cuckooJedis.get("mykey"));
 
     // Binary
-    jedis.watch(bmykey, "foobar".getBytes());
-    t = jedis.multi();
+    cuckooJedis.watch(bmykey, "foobar".getBytes());
+    t = cuckooJedis.multi();
 
     nj.connect();
     nj.auth("foobared");
@@ -106,17 +106,17 @@ public class TransactionCommandsTest extends JedisCommandTestBase {
     t.set(bmykey, bfoo);
     resp = t.exec();
     assertNull(resp);
-    assertTrue(Arrays.equals(bbar, jedis.get(bmykey)));
+    assertTrue(Arrays.equals(bbar, cuckooJedis.get(bmykey)));
   }
 
   @Test
   public void unwatch() throws UnknownHostException, IOException {
-    jedis.watch("mykey");
-    String val = jedis.get("mykey");
+    cuckooJedis.watch("mykey");
+    String val = cuckooJedis.get("mykey");
     val = "foo";
-    String status = jedis.unwatch();
+    String status = cuckooJedis.unwatch();
     assertEquals("OK", status);
-    Transaction t = jedis.multi();
+    Transaction t = cuckooJedis.multi();
 
     nj.connect();
     nj.auth("foobared");
@@ -129,12 +129,12 @@ public class TransactionCommandsTest extends JedisCommandTestBase {
     assertEquals("OK", resp.get(0));
 
     // Binary
-    jedis.watch(bmykey);
-    byte[] bval = jedis.get(bmykey);
+    cuckooJedis.watch(bmykey);
+    byte[] bval = cuckooJedis.get(bmykey);
     bval = bfoo;
-    status = jedis.unwatch();
+    status = cuckooJedis.unwatch();
     assertEquals(Keyword.OK.name(), status);
-    t = jedis.multi();
+    t = cuckooJedis.multi();
 
     nj.connect();
     nj.auth("foobared");
@@ -149,26 +149,26 @@ public class TransactionCommandsTest extends JedisCommandTestBase {
 
   @Test(expected = JedisDataException.class)
   public void validateWhenInMulti() {
-    jedis.multi();
-    jedis.ping();
+    cuckooJedis.multi();
+    cuckooJedis.ping();
   }
 
   @Test
   public void discard() {
-    Transaction t = jedis.multi();
+    Transaction t = cuckooJedis.multi();
     String status = t.discard();
     assertEquals("OK", status);
   }
 
   @Test
   public void transactionResponse() {
-    jedis.set("string", "foo");
-    jedis.lpush("list", "foo");
-    jedis.hset("hash", "foo", "bar");
-    jedis.zadd("zset", 1, "foo");
-    jedis.sadd("set", "foo");
+    cuckooJedis.set("string", "foo");
+    cuckooJedis.lpush("list", "foo");
+    cuckooJedis.hset("hash", "foo", "bar");
+    cuckooJedis.zadd("zset", 1, "foo");
+    cuckooJedis.sadd("set", "foo");
 
-    Transaction t = jedis.multi();
+    Transaction t = cuckooJedis.multi();
     Response<String> string = t.get("string");
     Response<String> list = t.lpop("list");
     Response<String> hash = t.hget("hash", "foo");
@@ -185,13 +185,13 @@ public class TransactionCommandsTest extends JedisCommandTestBase {
 
   @Test
   public void transactionResponseBinary() {
-    jedis.set("string", "foo");
-    jedis.lpush("list", "foo");
-    jedis.hset("hash", "foo", "bar");
-    jedis.zadd("zset", 1, "foo");
-    jedis.sadd("set", "foo");
+    cuckooJedis.set("string", "foo");
+    cuckooJedis.lpush("list", "foo");
+    cuckooJedis.hset("hash", "foo", "bar");
+    cuckooJedis.zadd("zset", 1, "foo");
+    cuckooJedis.sadd("set", "foo");
 
-    Transaction t = jedis.multi();
+    Transaction t = cuckooJedis.multi();
     Response<byte[]> string = t.get("string".getBytes());
     Response<byte[]> list = t.lpop("list".getBytes());
     Response<byte[]> hash = t.hget("hash".getBytes(), "foo".getBytes());
@@ -208,9 +208,9 @@ public class TransactionCommandsTest extends JedisCommandTestBase {
 
   @Test(expected = JedisDataException.class)
   public void transactionResponseWithinPipeline() {
-    jedis.set("string", "foo");
+    cuckooJedis.set("string", "foo");
 
-    Transaction t = jedis.multi();
+    Transaction t = cuckooJedis.multi();
     Response<String> string = t.get("string");
     string.get();
     t.exec();
@@ -218,7 +218,7 @@ public class TransactionCommandsTest extends JedisCommandTestBase {
 
   @Test
   public void transactionResponseWithError() {
-    Transaction t = jedis.multi();
+    Transaction t = cuckooJedis.multi();
     t.set("foo", "bar");
     Response<Set<String>> error = t.smembers("foo");
     Response<String> r = t.get("foo");
@@ -235,7 +235,7 @@ public class TransactionCommandsTest extends JedisCommandTestBase {
 
   @Test
   public void execGetResponse() {
-    Transaction t = jedis.multi();
+    Transaction t = cuckooJedis.multi();
 
     t.set("foo", "bar");
     t.smembers("foo");
@@ -253,16 +253,16 @@ public class TransactionCommandsTest extends JedisCommandTestBase {
 
   @Test
   public void select() {
-    jedis.select(1);
-    jedis.set("foo", "bar");
-    jedis.watch("foo");
-    Transaction t = jedis.multi();
+    cuckooJedis.select(1);
+    cuckooJedis.set("foo", "bar");
+    cuckooJedis.watch("foo");
+    Transaction t = cuckooJedis.multi();
     t.select(0);
     t.set("bar", "foo");
 
-    Jedis jedis2 = createJedis();
-    jedis2.select(1);
-    jedis2.set("foo", "bar2");
+    CuckooJedis cuckooJedis2 = createJedis();
+    cuckooJedis2.select(1);
+    cuckooJedis2.set("foo", "bar2");
 
     List<Object> results = t.exec();
     assertNull(results);
@@ -270,35 +270,35 @@ public class TransactionCommandsTest extends JedisCommandTestBase {
 
   @Test
   public void testResetStateWhenInMulti() {
-    jedis.auth("foobared");
+    cuckooJedis.auth("foobared");
 
-    Transaction t = jedis.multi();
+    Transaction t = cuckooJedis.multi();
     t.set("foooo", "barrr");
 
-    jedis.resetState();
-    assertNull(jedis.get("foooo"));
+    cuckooJedis.resetState();
+    assertNull(cuckooJedis.get("foooo"));
   }
 
   @Test
   public void testResetStateWhenInMultiWithinPipeline() {
-    jedis.auth("foobared");
+    cuckooJedis.auth("foobared");
 
-    Pipeline p = jedis.pipelined();
+    Pipeline p = cuckooJedis.pipelined();
     p.multi();
     p.set("foooo", "barrr");
 
-    jedis.resetState();
-    assertNull(jedis.get("foooo"));
+    cuckooJedis.resetState();
+    assertNull(cuckooJedis.get("foooo"));
   }
 
   @Test
   public void testResetStateWhenInWatch() {
-    jedis.watch("mykey", "somekey");
+    cuckooJedis.watch("mykey", "somekey");
 
     // state reset : unwatch
-    jedis.resetState();
+    cuckooJedis.resetState();
 
-    Transaction t = jedis.multi();
+    Transaction t = cuckooJedis.multi();
 
     nj.connect();
     nj.auth("foobared");
@@ -309,15 +309,15 @@ public class TransactionCommandsTest extends JedisCommandTestBase {
     List<Object> resp = t.exec();
     assertNotNull(resp);
     assertEquals(1, resp.size());
-    assertEquals("foo", jedis.get("mykey"));
+    assertEquals("foo", cuckooJedis.get("mykey"));
   }
 
   @Test
   public void testResetStateWithFullyExecutedTransaction() {
-    Jedis jedis2 = new Jedis(jedis.getClient().getHost(), jedis.getClient().getPort());
-    jedis2.auth("foobared");
+    CuckooJedis cuckooJedis2 = new CuckooJedis(cuckooJedis.getClient().getHost(), cuckooJedis.getClient().getPort());
+    cuckooJedis2.auth("foobared");
 
-    Transaction t = jedis2.multi();
+    Transaction t = cuckooJedis2.multi();
     t.set("mykey", "foo");
     t.get("mykey");
 
@@ -325,17 +325,17 @@ public class TransactionCommandsTest extends JedisCommandTestBase {
     assertNotNull(resp);
     assertEquals(2, resp.size());
 
-    jedis2.resetState();
-    jedis2.close();
+    cuckooJedis2.resetState();
+    cuckooJedis2.close();
   }
 
   @Test
   public void testCloseable() throws IOException {
-    // we need to test with fresh instance of Jedis
-    Jedis jedis2 = new Jedis(hnp.getHost(), hnp.getPort(), 500);
-    jedis2.auth("foobared");
+    // we need to test with fresh instance of CuckooJedis
+    CuckooJedis cuckooJedis2 = new CuckooJedis(hnp.getHost(), hnp.getPort(), 500);
+    cuckooJedis2.auth("foobared");
 
-    Transaction transaction = jedis2.multi();
+    Transaction transaction = cuckooJedis2.multi();
     transaction.set("a", "1");
     transaction.set("b", "2");
 
@@ -353,7 +353,7 @@ public class TransactionCommandsTest extends JedisCommandTestBase {
 
   @Test
   public void testTransactionWithGeneralCommand(){
-    Transaction t = jedis.multi();
+    Transaction t = cuckooJedis.multi();
     t.set("string", "foo");
     t.lpush("list", "foo");
     t.hset("hash", "foo", "bar");
@@ -382,7 +382,7 @@ public class TransactionCommandsTest extends JedisCommandTestBase {
 
   @Test
   public void transactionResponseWithErrorWithGeneralCommand() {
-    Transaction t = jedis.multi();
+    Transaction t = cuckooJedis.multi();
     t.set("foo", "bar");
     t.sendCommand(SET, "x", "1");
     Response<Set<String>> error = t.smembers("foo");
