@@ -3836,9 +3836,9 @@ public class Jedis extends BinaryJedis implements JedisCommands, MultiKeyCommand
   }
 
   //tongzi modifiy
-  public String cf_reverse(final String key, final String capacity) {
+  public String cf_reverse(final String key, final Long capacity) {
     checkIsInMultiOrPipeline();
-    client.cf_reserve(key, capacity);
+    client.cf_reserve(key, String.valueOf(capacity));
     return client.getStatusCodeReply();
   }
 
@@ -3854,15 +3854,63 @@ public class Jedis extends BinaryJedis implements JedisCommands, MultiKeyCommand
     return client.getIntegerReply();
   }
 
+  public List<Long> cf_insert(final String key, final Long capacity, final String... value) {
+    checkIsInMultiOrPipeline();
+    String[] vars = new String[value.length + 3];
+    System.arraycopy(value, 0, vars, 3, key.length());
+    vars[0] = "CAPACITY";
+    vars[1] = String.valueOf(capacity);
+    vars[2] = "ITEMS";
+    client.cf_insert(key, vars);
+    return client.getIntegerMultiBulkReply();
+  }
+
+  public List<Long> cf_insert_nocreate(final String key, final String... value) {
+    checkIsInMultiOrPipeline();
+    String[] vars = new String[value.length + 2];
+    System.arraycopy(value, 0, vars, 2, key.length());
+    vars[0] = "NOCREATE";
+    vars[1] = "ITEMS";
+    client.cf_insert(key, vars);
+    return client.getIntegerMultiBulkReply();
+  }
+
   public List<Long> cf_insert(final String key, final String... value) {
     checkIsInMultiOrPipeline();
-    client.cf_insert(key, value);
+    String[] vars = new String[value.length + 1];
+    System.arraycopy(value, 0, vars, 1, key.length());
+    vars[0] = "ITEMS";
+    client.cf_insert(key, vars);
+    return client.getIntegerMultiBulkReply();
+  }
+
+  public List<Long> cf_insertnx(final String key, final Long capacity, final String... value) {
+    checkIsInMultiOrPipeline();
+    String[] vars = new String[value.length + 3];
+    System.arraycopy(value, 0, vars, 3, key.length());
+    vars[0] = "CAPACITY";
+    vars[1] = String.valueOf(capacity);
+    vars[2] = "ITEMS";
+    client.cf_insertnx(key, vars);
+    return client.getIntegerMultiBulkReply();
+  }
+
+  public List<Long> cf_insertnx_nocreate(final String key, final String... value) {
+    checkIsInMultiOrPipeline();
+    String[] vars = new String[value.length + 2];
+    System.arraycopy(value, 0, vars, 2, key.length());
+    vars[0] = "NOCREATE";
+    vars[1] = "ITEMS";
+    client.cf_insertnx(key, vars);
     return client.getIntegerMultiBulkReply();
   }
 
   public List<Long> cf_insertnx(final String key, final String... value) {
     checkIsInMultiOrPipeline();
-    client.cf_insertnx(key, value);
+    String[] vars = new String[value.length + 1];
+    System.arraycopy(value, 0, vars, 1, key.length());
+    vars[0] = "ITEMS";
+    client.cf_insertnx(key, vars);
     return client.getIntegerMultiBulkReply();
   }
 
@@ -3890,9 +3938,9 @@ public class Jedis extends BinaryJedis implements JedisCommands, MultiKeyCommand
     return client.getIntegerReply();
   }
 
-  public ScanResult cf_scandump(final String key, final String value) {
+  public ScanResult cf_scandump(final String key, final String cursor) {
     checkIsInMultiOrPipeline();
-    client.cf_scandump(key, value);
+    client.cf_scandump(key, cursor);
     List<Object> result = client.getObjectMultiBulkReply();
     String newcursor = new String((byte[]) result.get(0));
     List<String> results = new ArrayList<String>();
@@ -3903,9 +3951,9 @@ public class Jedis extends BinaryJedis implements JedisCommands, MultiKeyCommand
     return new ScanResult<String>(newcursor, results);
   }
 
-  public String cf_loadchunk(final String key, final String... value) {
+  public String cf_loadchunk(final String key, final String cursor, final String data) {
     checkIsInMultiOrPipeline();
-    client.cf_loadchunk(key, value);
+    client.cf_loadchunk(key, cursor, data);
     return client.getStatusCodeReply();
   }
 
