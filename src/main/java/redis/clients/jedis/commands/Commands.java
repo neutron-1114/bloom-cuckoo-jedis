@@ -21,6 +21,20 @@ public interface Commands {
   
   void set(String key, String value);
 
+  //tongzi modifiy
+  void cf_reserve(String key, String value);
+  void cf_add(String key, String value);
+  void cf_addnx(String key, String value);
+  void cf_insert(String key, String... value);
+  void cf_insertnx(String key, String... value);
+  void cf_exists(String key, String value);
+  void cf_mexists(String key, String... value);
+  void cf_del(String key, String value);
+  void cf_count(String key, String value);
+  void cf_scandump(String key, String value);
+  void cf_loadchunk(String key, String... value);
+
+
   void set(String key, String value, SetParams params);
 
   void get(String key);

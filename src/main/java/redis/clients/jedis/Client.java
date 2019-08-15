@@ -1262,5 +1262,61 @@ public class Client extends BinaryClient implements Commands {
     xclaim(SafeEncoder.encode(key), SafeEncoder.encode(group), SafeEncoder.encode(consumername), minIdleTime, newIdleTime, retries, force, bids);    
   }
 
- 
+  //tongzi modifiy
+  @Override
+  public void cf_reserve(String key, String value) {
+    cf_reserve(SafeEncoder.encode(key), SafeEncoder.encode(value));
+  }
+
+  @Override
+  public void cf_add(final String key, final String value) {
+    cf_add(SafeEncoder.encode(key), SafeEncoder.encode(value));
+  }
+
+  @Override
+  public void cf_addnx(final String key, final String value) {
+    cf_addnx(SafeEncoder.encode(key), SafeEncoder.encode(value));
+  }
+
+  @Override
+  public void cf_insert(final String key, final String... value) {
+    cf_insert(SafeEncoder.encode(key), SafeEncoder.encodeMany(value));
+  }
+
+  @Override
+  public void cf_insertnx(String key, String... value) {
+    cf_insertnx(SafeEncoder.encode(key), SafeEncoder.encodeMany(value));
+  }
+
+  @Override
+  public void cf_exists(final String key, final String value) {
+    cf_exists(SafeEncoder.encode(key), SafeEncoder.encode(value));
+  }
+
+  @Override
+  public void cf_mexists(String key, String... value) {
+    cf_mexists(SafeEncoder.encode(key), SafeEncoder.encodeMany(value));
+  }
+
+  @Override
+  public void cf_del(String key, String value) {
+    cf_del(SafeEncoder.encode(key), SafeEncoder.encode(value));
+  }
+
+  @Override
+  public void cf_count(String key, String value) {
+    cf_count(SafeEncoder.encode(key), SafeEncoder.encode(value));
+  }
+
+  @Override
+  public void cf_scandump(String key, String value) {
+    cf_scandump(SafeEncoder.encode(key), SafeEncoder.encode(value));
+  }
+
+  @Override
+  public void cf_loadchunk(String key, String... value) {
+    cf_loadchunk(SafeEncoder.encode(key), SafeEncoder.encodeMany(value));
+  }
+
+
 }

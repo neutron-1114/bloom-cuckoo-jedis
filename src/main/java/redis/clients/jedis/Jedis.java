@@ -3834,4 +3834,79 @@ public class Jedis extends BinaryJedis implements JedisCommands, MultiKeyCommand
     client.sendCommand(cmd, args);
     return client.getOne();
   }
+
+  //tongzi modifiy
+  public String cf_reverse(final String key, final String capacity) {
+    checkIsInMultiOrPipeline();
+    client.cf_reserve(key, capacity);
+    return client.getStatusCodeReply();
+  }
+
+  public Long cf_add(final String key, final String value) {
+    checkIsInMultiOrPipeline();
+    client.cf_add(key, value);
+    return client.getIntegerReply();
+  }
+
+  public Long cf_addnx(final String key, final String value) {
+    checkIsInMultiOrPipeline();
+    client.cf_addnx(key, value);
+    return client.getIntegerReply();
+  }
+
+  public List<Long> cf_insert(final String key, final String... value) {
+    checkIsInMultiOrPipeline();
+    client.cf_insert(key, value);
+    return client.getIntegerMultiBulkReply();
+  }
+
+  public List<Long> cf_insertnx(final String key, final String... value) {
+    checkIsInMultiOrPipeline();
+    client.cf_insertnx(key, value);
+    return client.getIntegerMultiBulkReply();
+  }
+
+  public Long cf_exists(final String key, final String value) {
+    checkIsInMultiOrPipeline();
+    client.cf_exists(key, value);
+    return client.getIntegerReply();
+  }
+
+  public List<Long> cf_mexists(final String key, final String... value) {
+    checkIsInMultiOrPipeline();
+    client.cf_mexists(key, value);
+    return client.getIntegerMultiBulkReply();
+  }
+
+  public Long cf_del(final String key, final String value) {
+    checkIsInMultiOrPipeline();
+    client.cf_del(key, value);
+    return client.getIntegerReply();
+  }
+
+  public Long cf_count(final String key, final String value) {
+    checkIsInMultiOrPipeline();
+    client.cf_count(key, value);
+    return client.getIntegerReply();
+  }
+
+  public ScanResult cf_scandump(final String key, final String value) {
+    checkIsInMultiOrPipeline();
+    client.cf_scandump(key, value);
+    List<Object> result = client.getObjectMultiBulkReply();
+    String newcursor = new String((byte[]) result.get(0));
+    List<String> results = new ArrayList<String>();
+    List<byte[]> rawResults = (List<byte[]>) result.get(1);
+    for (byte[] bs : rawResults) {
+      results.add(SafeEncoder.encode(bs));
+    }
+    return new ScanResult<String>(newcursor, results);
+  }
+
+  public String cf_loadchunk(final String key, final String... value) {
+    checkIsInMultiOrPipeline();
+    client.cf_loadchunk(key, value);
+    return client.getStatusCodeReply();
+  }
+
 }
