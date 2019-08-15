@@ -1,9 +1,9 @@
-[![GitHub issues](https://img.shields.io/github/release/xetorthio/cuckooJedis.svg)](https://github.com/xetorthio/cuckooJedis/releases/latest)
-[![Build Status](https://travis-ci.org/xetorthio/cuckooJedis.png?branch=master)](https://travis-ci.org/xetorthio/cuckooJedis)
-[![Maven Central](https://img.shields.io/maven-central/v/redis.clients/cuckooJedis.svg)](http://mvnrepository.com/artifact/redis.clients/cuckooJedis)
-[![Javadocs](https://www.javadoc.io/badge/redis.clients/cuckooJedis.svg)](https://www.javadoc.io/doc/redis.clients/cuckooJedis)
+[![GitHub issues](https://img.shields.io/github/release/xetorthio/jedis.svg)](https://github.com/xetorthio/jedis/releases/latest)
+[![Build Status](https://travis-ci.org/xetorthio/jedis.png?branch=master)](https://travis-ci.org/xetorthio/jedis)
+[![Maven Central](https://img.shields.io/maven-central/v/redis.clients/jedis.svg)](http://mvnrepository.com/artifact/redis.clients/jedis)
+[![Javadocs](https://www.javadoc.io/badge/redis.clients/jedis.svg)](https://www.javadoc.io/doc/redis.clients/jedis)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE.txt)
-[![Gitter](https://badges.gitter.im/xetorthio/cuckooJedis.svg)](https://gitter.im/xetorthio/cuckooJedis?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+[![Gitter](https://badges.gitter.im/xetorthio/jedis.svg)](https://gitter.im/xetorthio/jedis?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 # Jedis
 
@@ -17,7 +17,7 @@ Jedis is fully compatible with redis 2.8.x, 3.x.x and above*.
 
 ## Community
 
-Meet us on IRC: ##cuckooJedis on freenode.net
+Meet us on IRC: ##jedis on freenode.net
 
 Join the mailing-list at [http://groups.google.com/group/jedis_redis](http://groups.google.com/group/jedis_redis)
 
@@ -47,7 +47,7 @@ All of the following redis features are supported:
 ## How do I use it?
 
 You can download the latest build at: 
-    http://github.com/xetorthio/cuckooJedis/releases
+    http://github.com/xetorthio/jedis/releases
 
 Or use it as a maven dependency:
 
@@ -56,7 +56,7 @@ Or use it as a maven dependency:
 ```xml
 <dependency>
     <groupId>redis.clients</groupId>
-    <artifactId>cuckooJedis</artifactId>
+    <artifactId>jedis</artifactId>
     <version>3.1.0</version>
     <type>jar</type>
     <scope>compile</scope>
@@ -66,7 +66,7 @@ Or use it as a maven dependency:
 ```xml
 <dependency>
     <groupId>redis.clients</groupId>
-    <artifactId>cuckooJedis</artifactId>
+    <artifactId>jedis</artifactId>
     <version>2.10.2</version>
     <type>jar</type>
     <scope>compile</scope>
@@ -89,7 +89,7 @@ and
   <dependencies>
     <dependency>
       <groupId>redis.clients</groupId>
-      <artifactId>cuckooJedis</artifactId>
+      <artifactId>jedis</artifactId>
       <version>3.2.0-SNAPSHOT</version>
     </dependency>
   </dependencies>
@@ -99,16 +99,16 @@ and
 To use it just:
     
 ```java
-Jedis cuckooJedis = new Jedis("localhost");
-cuckooJedis.set("foo", "bar");
-String value = cuckooJedis.get("foo");
+Jedis jedis = new Jedis("localhost");
+jedis.set("foo", "bar");
+String value = jedis.get("foo");
 ```
 
 For more usage examples check the tests.
 
-Please check the [wiki](http://github.com/xetorthio/cuckooJedis/wiki "wiki"). There are lots of cool things you should know, including information about connection pooling.
+Please check the [wiki](http://github.com/xetorthio/jedis/wiki "wiki"). There are lots of cool things you should know, including information about connection pooling.
 
-Master branch javadocs can be found here: http://xetorthio.github.io/cuckooJedis/
+Master branch javadocs can be found here: http://xetorthio.github.io/jedis/
 
 And you are done!
 

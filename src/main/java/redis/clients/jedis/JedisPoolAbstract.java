@@ -5,23 +5,23 @@ import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 
 import redis.clients.jedis.util.Pool;
 
-public class JedisPoolAbstract extends Pool<CuckooJedis> {
+public class JedisPoolAbstract extends Pool<Jedis> {
 
   public JedisPoolAbstract() {
     super();
   }
 
-  public JedisPoolAbstract(GenericObjectPoolConfig poolConfig, PooledObjectFactory<CuckooJedis> factory) {
+  public JedisPoolAbstract(GenericObjectPoolConfig poolConfig, PooledObjectFactory<Jedis> factory) {
     super(poolConfig, factory);
   }
 
   @Override
-  protected void returnBrokenResource(CuckooJedis resource) {
+  protected void returnBrokenResource(Jedis resource) {
     super.returnBrokenResource(resource);
   }
 
   @Override
-  protected void returnResource(CuckooJedis resource) {
+  protected void returnResource(Jedis resource) {
     super.returnResource(resource);
   }
 }

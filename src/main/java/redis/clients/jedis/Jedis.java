@@ -30,96 +30,96 @@ import redis.clients.jedis.params.ZIncrByParams;
 import redis.clients.jedis.util.SafeEncoder;
 import redis.clients.jedis.util.Slowlog;
 
-public class CuckooJedis extends BinaryJedis implements JedisCommands, MultiKeyCommands,
+public class Jedis extends BinaryJedis implements JedisCommands, MultiKeyCommands,
     AdvancedJedisCommands, ScriptingCommands, BasicCommands, ClusterCommands, SentinelCommands, ModuleCommands {
 
   protected JedisPoolAbstract dataSource = null;
 
-  public CuckooJedis() {
+  public Jedis() {
     super();
   }
 
-  public CuckooJedis(final String host) {
+  public Jedis(final String host) {
     super(host);
   }
 
-  public CuckooJedis(final HostAndPort hp) {
+  public Jedis(final HostAndPort hp) {
     super(hp);
   }
 
-  public CuckooJedis(final String host, final int port) {
+  public Jedis(final String host, final int port) {
     super(host, port);
   }
 
-  public CuckooJedis(final String host, final int port, final boolean ssl) {
+  public Jedis(final String host, final int port, final boolean ssl) {
     super(host, port, ssl);
   }
 
-  public CuckooJedis(final String host, final int port, final boolean ssl,
-                     final SSLSocketFactory sslSocketFactory, final SSLParameters sslParameters,
-                     final HostnameVerifier hostnameVerifier) {
+  public Jedis(final String host, final int port, final boolean ssl,
+               final SSLSocketFactory sslSocketFactory, final SSLParameters sslParameters,
+               final HostnameVerifier hostnameVerifier) {
     super(host, port, ssl, sslSocketFactory, sslParameters, hostnameVerifier);
   }
 
-  public CuckooJedis(final String host, final int port, final int timeout) {
+  public Jedis(final String host, final int port, final int timeout) {
     super(host, port, timeout);
   }
 
-  public CuckooJedis(final String host, final int port, final int timeout, final boolean ssl) {
+  public Jedis(final String host, final int port, final int timeout, final boolean ssl) {
     super(host, port, timeout, ssl);
   }
 
-  public CuckooJedis(final String host, final int port, final int timeout, final boolean ssl,
-                     final SSLSocketFactory sslSocketFactory, final SSLParameters sslParameters,
-                     final HostnameVerifier hostnameVerifier) {
+  public Jedis(final String host, final int port, final int timeout, final boolean ssl,
+               final SSLSocketFactory sslSocketFactory, final SSLParameters sslParameters,
+               final HostnameVerifier hostnameVerifier) {
     super(host, port, timeout, ssl, sslSocketFactory, sslParameters, hostnameVerifier);
   }
 
-  public CuckooJedis(final String host, final int port, final int connectionTimeout, final int soTimeout) {
+  public Jedis(final String host, final int port, final int connectionTimeout, final int soTimeout) {
     super(host, port, connectionTimeout, soTimeout);
   }
 
-  public CuckooJedis(final String host, final int port, final int connectionTimeout, final int soTimeout,
-                     final boolean ssl) {
+  public Jedis(final String host, final int port, final int connectionTimeout, final int soTimeout,
+               final boolean ssl) {
     super(host, port, connectionTimeout, soTimeout, ssl);
   }
 
-  public CuckooJedis(final String host, final int port, final int connectionTimeout, final int soTimeout,
-                     final boolean ssl, final SSLSocketFactory sslSocketFactory, final SSLParameters sslParameters,
-                     final HostnameVerifier hostnameVerifier) {
+  public Jedis(final String host, final int port, final int connectionTimeout, final int soTimeout,
+               final boolean ssl, final SSLSocketFactory sslSocketFactory, final SSLParameters sslParameters,
+               final HostnameVerifier hostnameVerifier) {
     super(host, port, connectionTimeout, soTimeout, ssl, sslSocketFactory, sslParameters,
         hostnameVerifier);
   }
 
-  public CuckooJedis(JedisShardInfo shardInfo) {
+  public Jedis(JedisShardInfo shardInfo) {
     super(shardInfo);
   }
 
-  public CuckooJedis(URI uri) {
+  public Jedis(URI uri) {
     super(uri);
   }
 
-  public CuckooJedis(URI uri, final SSLSocketFactory sslSocketFactory, final SSLParameters sslParameters,
-                     final HostnameVerifier hostnameVerifier) {
+  public Jedis(URI uri, final SSLSocketFactory sslSocketFactory, final SSLParameters sslParameters,
+               final HostnameVerifier hostnameVerifier) {
     super(uri, sslSocketFactory, sslParameters, hostnameVerifier);
   }
 
-  public CuckooJedis(final URI uri, final int timeout) {
+  public Jedis(final URI uri, final int timeout) {
     super(uri, timeout);
   }
 
-  public CuckooJedis(final URI uri, final int timeout, final SSLSocketFactory sslSocketFactory,
-                     final SSLParameters sslParameters, final HostnameVerifier hostnameVerifier) {
+  public Jedis(final URI uri, final int timeout, final SSLSocketFactory sslSocketFactory,
+               final SSLParameters sslParameters, final HostnameVerifier hostnameVerifier) {
     super(uri, timeout, sslSocketFactory, sslParameters, hostnameVerifier);
   }
 
-  public CuckooJedis(final URI uri, final int connectionTimeout, final int soTimeout) {
+  public Jedis(final URI uri, final int connectionTimeout, final int soTimeout) {
     super(uri, connectionTimeout, soTimeout);
   }
 
-  public CuckooJedis(final URI uri, final int connectionTimeout, final int soTimeout,
-                     final SSLSocketFactory sslSocketFactory, final SSLParameters sslParameters,
-                     final HostnameVerifier hostnameVerifier) {
+  public Jedis(final URI uri, final int connectionTimeout, final int soTimeout,
+               final SSLSocketFactory sslSocketFactory, final SSLParameters sslParameters,
+               final HostnameVerifier hostnameVerifier) {
     super(uri, connectionTimeout, soTimeout, sslSocketFactory, sslParameters, hostnameVerifier);
   }
 

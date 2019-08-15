@@ -7,7 +7,7 @@ import java.io.OutputStream;
 /**
  * The class implements a buffered output stream without synchronization There are also special
  * operations like in-place string encoding. This stream fully ignore mark/reset and should not be
- * used outside CuckooJedis
+ * used outside Jedis
  */
 public final class RedisOutputStream extends FilterOutputStream {
   protected final byte[] buf;

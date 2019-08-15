@@ -37,31 +37,31 @@ public class JedisSlotBasedConnectionHandler extends JedisClusterConnectionHandl
   }
 
   @Override
-  public CuckooJedis getConnection() {
+  public Jedis getConnection() {
     // In antirez's redis-rb-cluster implementation,
     // getRandomConnection always return valid connection (able to
     // ping-pong)
     // or exception if all connections are invalid
 
-    List<CuckooJedisPool> pools = cache.getShuffledNodesPool();
+    List<JedisPool> pools = cache.getShuffledNodesPool();
 
-    for (CuckooJedisPool pool : pools) {
-      CuckooJedis cuckooJedis = null;
+    for (JedisPool pool : pools) {
+      Jedis jedis = null;
       try {
-        cuckooJedis = pool.getResource();
+        jedis = pool.getResource();
 
-        if (cuckooJedis == null) {
+        if (jedis == null) {
           continue;
         }
 
-        String result = cuckooJedis.ping();
+        String result = jedis.ping();
 
-        if (result.equalsIgnoreCase("pong")) return cuckooJedis;
+        if (result.equalsIgnoreCase("pong")) return jedis;
 
-        cuckooJedis.close();
+        jedis.close();
       } catch (JedisException ex) {
-        if (cuckooJedis != null) {
-          cuckooJedis.close();
+        if (jedis != null) {
+          jedis.close();
         }
       }
     }
@@ -70,8 +70,8 @@ public class JedisSlotBasedConnectionHandler extends JedisClusterConnectionHandl
   }
 
   @Override
-  public CuckooJedis getConnectionFromSlot(int slot) {
-    CuckooJedisPool connectionPool = cache.getSlotPool(slot);
+  public Jedis getConnectionFromSlot(int slot) {
+    JedisPool connectionPool = cache.getSlotPool(slot);
     if (connectionPool != null) {
       // It can't guaranteed to get valid connection because of node
       // assignment

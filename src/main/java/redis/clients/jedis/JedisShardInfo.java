@@ -11,7 +11,7 @@ import redis.clients.jedis.util.JedisURIHelper;
 import redis.clients.jedis.util.ShardInfo;
 import redis.clients.jedis.util.Sharded;
 
-public class JedisShardInfo extends ShardInfo<CuckooJedis> {
+public class JedisShardInfo extends ShardInfo<Jedis> {
 
   private int connectionTimeout;
   private int soTimeout;
@@ -245,8 +245,8 @@ public class JedisShardInfo extends ShardInfo<CuckooJedis> {
   }
 
   @Override
-  public CuckooJedis createResource() {
-    return new CuckooJedis(this);
+  public Jedis createResource() {
+    return new Jedis(this);
   }
   
 }

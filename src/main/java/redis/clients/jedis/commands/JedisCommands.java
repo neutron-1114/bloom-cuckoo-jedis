@@ -22,7 +22,7 @@ import redis.clients.jedis.params.ZAddParams;
 import redis.clients.jedis.params.ZIncrByParams;
 
 /**
- * Common interface for sharded and non-sharded CuckooJedis
+ * Common interface for sharded and non-sharded Jedis
  */
 public interface JedisCommands {
   String set(String key, String value);

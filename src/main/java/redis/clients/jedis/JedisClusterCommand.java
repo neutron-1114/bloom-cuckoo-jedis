@@ -19,7 +19,7 @@ public abstract class JedisClusterCommand<T> {
     this.maxAttempts = maxAttempts;
   }
 
-  public abstract T execute(CuckooJedis connection);
+  public abstract T execute(Jedis connection);
 
   public T run(String key) {
     return runWithRetries(JedisClusterCRC16.getSlot(key), this.maxAttempts, false, null);
@@ -70,7 +70,7 @@ public abstract class JedisClusterCommand<T> {
   }
 
   public T runWithAnyNode() {
-    CuckooJedis connection = null;
+    Jedis connection = null;
     try {
       connection = connectionHandler.getConnection();
       return execute(connection);
@@ -86,7 +86,7 @@ public abstract class JedisClusterCommand<T> {
       throw new JedisClusterMaxAttemptsException("No more cluster attempts left.");
     }
 
-    CuckooJedis connection = null;
+    Jedis connection = null;
     try {
 
       if (redirect != null) {
@@ -139,7 +139,7 @@ public abstract class JedisClusterCommand<T> {
     }
   }
 
-  private void releaseConnection(CuckooJedis connection) {
+  private void releaseConnection(Jedis connection) {
     if (connection != null) {
       connection.close();
     }

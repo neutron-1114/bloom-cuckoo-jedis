@@ -127,7 +127,7 @@ public class JedisSentinelPool extends JedisPoolAbstract {
           internalPool.clear();
         }
 
-        log.info("Created CuckooJedisPool to master at " + master);
+        log.info("Created JedisPool to master at " + master);
       }
     }
   }
@@ -144,11 +144,11 @@ public class JedisSentinelPool extends JedisPoolAbstract {
 
       log.debug("Connecting to Sentinel {}", hap);
 
-      CuckooJedis cuckooJedis = null;
+      Jedis jedis = null;
       try {
-        cuckooJedis = new CuckooJedis(hap);
+        jedis = new Jedis(hap);
 
-        List<String> masterAddr = cuckooJedis.sentinelGetMasterAddrByName(masterName);
+        List<String> masterAddr = jedis.sentinelGetMasterAddrByName(masterName);
 
         // connected to sentinel...
         sentinelAvailable = true;
@@ -168,8 +168,8 @@ public class JedisSentinelPool extends JedisPoolAbstract {
           "Cannot get master address from sentinel running @ {}. Reason: {}. Trying next one.", hap,
           e.toString());
       } finally {
-        if (cuckooJedis != null) {
-          cuckooJedis.close();
+        if (jedis != null) {
+          jedis.close();
         }
       }
     }
@@ -208,34 +208,34 @@ public class JedisSentinelPool extends JedisPoolAbstract {
   }
 
   @Override
-  public CuckooJedis getResource() {
+  public Jedis getResource() {
     while (true) {
-      CuckooJedis cuckooJedis = super.getResource();
-      cuckooJedis.setDataSource(this);
+      Jedis jedis = super.getResource();
+      jedis.setDataSource(this);
 
       // get a reference because it can change concurrently
       final HostAndPort master = currentHostMaster;
-      final HostAndPort connection = new HostAndPort(cuckooJedis.getClient().getHost(), cuckooJedis.getClient()
+      final HostAndPort connection = new HostAndPort(jedis.getClient().getHost(), jedis.getClient()
           .getPort());
 
       if (master.equals(connection)) {
         // connected to the correct master
-        return cuckooJedis;
+        return jedis;
       } else {
-        returnBrokenResource(cuckooJedis);
+        returnBrokenResource(jedis);
       }
     }
   }
 
   @Override
-  protected void returnBrokenResource(final CuckooJedis resource) {
+  protected void returnBrokenResource(final Jedis resource) {
     if (resource != null) {
       returnBrokenResourceObject(resource);
     }
   }
 
   @Override
-  protected void returnResource(final CuckooJedis resource) {
+  protected void returnResource(final Jedis resource) {
     if (resource != null) {
       resource.resetState();
       returnResourceObject(resource);
@@ -248,7 +248,7 @@ public class JedisSentinelPool extends JedisPoolAbstract {
     protected String host;
     protected int port;
     protected long subscribeRetryWaitTimeMillis = 5000;
-    protected volatile CuckooJedis j;
+    protected volatile Jedis j;
     protected AtomicBoolean running = new AtomicBoolean(false);
 
     protected MasterListener() {
@@ -274,7 +274,7 @@ public class JedisSentinelPool extends JedisPoolAbstract {
 
       while (running.get()) {
 
-        j = new CuckooJedis(host, port);
+        j = new Jedis(host, port);
 
         try {
           // double check that it is not being shutdown
@@ -340,7 +340,7 @@ public class JedisSentinelPool extends JedisPoolAbstract {
       try {
         log.debug("Shutting down listener on {}:{}", host, port);
         running.set(false);
-        // This isn't good, the CuckooJedis object is not thread safe
+        // This isn't good, the Jedis object is not thread safe
         if (j != null) {
           j.disconnect();
         }

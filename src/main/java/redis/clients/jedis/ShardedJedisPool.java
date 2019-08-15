@@ -76,15 +76,15 @@ public class ShardedJedisPool extends Pool<ShardedJedis> {
     @Override
     public void destroyObject(PooledObject<ShardedJedis> pooledShardedJedis) throws Exception {
       final ShardedJedis shardedJedis = pooledShardedJedis.getObject();
-      for (CuckooJedis cuckooJedis : shardedJedis.getAllShards()) {
-        if (cuckooJedis.isConnected()) {
+      for (Jedis jedis : shardedJedis.getAllShards()) {
+        if (jedis.isConnected()) {
           try {
             try {
-              cuckooJedis.quit();
+              jedis.quit();
             } catch (Exception e) {
 
             }
-            cuckooJedis.disconnect();
+            jedis.disconnect();
           } catch (Exception e) {
 
           }
@@ -96,7 +96,7 @@ public class ShardedJedisPool extends Pool<ShardedJedis> {
     public boolean validateObject(PooledObject<ShardedJedis> pooledShardedJedis) {
       try {
         ShardedJedis jedis = pooledShardedJedis.getObject();
-        for (CuckooJedis shard : jedis.getAllShards()) {
+        for (Jedis shard : jedis.getAllShards()) {
           if (!shard.ping().equals("PONG")) {
             return false;
           }

@@ -16,7 +16,7 @@ import java.util.List;
 import redis.clients.jedis.util.SafeEncoder;
 
 /**
- * Builder Class for {@link CuckooJedis#sort(String, SortingParams) SORT} Parameters.
+ * Builder Class for {@link Jedis#sort(String, SortingParams) SORT} Parameters.
  */
 public class SortingParams {
   private List<byte[]> params = new ArrayList<byte[]>();

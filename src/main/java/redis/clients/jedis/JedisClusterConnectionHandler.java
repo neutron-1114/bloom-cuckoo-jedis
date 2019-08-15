@@ -33,15 +33,15 @@ public abstract class JedisClusterConnectionHandler implements Closeable {
     initializeSlotsCache(nodes, poolConfig, connectionTimeout, soTimeout, password, clientName, ssl, sslSocketFactory, sslParameters, hostnameVerifier);
   }
 
-  abstract CuckooJedis getConnection();
+  abstract Jedis getConnection();
 
-  abstract CuckooJedis getConnectionFromSlot(int slot);
+  abstract Jedis getConnectionFromSlot(int slot);
 
-  public CuckooJedis getConnectionFromNode(HostAndPort node) {
+  public Jedis getConnectionFromNode(HostAndPort node) {
     return cache.setupNodeIfNotExist(node).getResource();
   }
   
-  public Map<String, CuckooJedisPool> getNodes() {
+  public Map<String, JedisPool> getNodes() {
     return cache.getNodes();
   }
 
@@ -49,22 +49,22 @@ public abstract class JedisClusterConnectionHandler implements Closeable {
       int connectionTimeout, int soTimeout, String password, String clientName,
       boolean ssl, SSLSocketFactory sslSocketFactory, SSLParameters sslParameters, HostnameVerifier hostnameVerifier) {
     for (HostAndPort hostAndPort : startNodes) {
-      CuckooJedis cuckooJedis = null;
+      Jedis jedis = null;
       try {
-        cuckooJedis = new CuckooJedis(hostAndPort.getHost(), hostAndPort.getPort(), connectionTimeout, soTimeout, ssl, sslSocketFactory, sslParameters, hostnameVerifier);
+        jedis = new Jedis(hostAndPort.getHost(), hostAndPort.getPort(), connectionTimeout, soTimeout, ssl, sslSocketFactory, sslParameters, hostnameVerifier);
         if (password != null) {
-          cuckooJedis.auth(password);
+          jedis.auth(password);
         }
         if (clientName != null) {
-          cuckooJedis.clientSetname(clientName);
+          jedis.clientSetname(clientName);
         }
-        cache.discoverClusterNodesAndSlots(cuckooJedis);
+        cache.discoverClusterNodesAndSlots(jedis);
         break;
       } catch (JedisConnectionException e) {
         // try next nodes
       } finally {
-        if (cuckooJedis != null) {
-          cuckooJedis.close();
+        if (jedis != null) {
+          jedis.close();
         }
       }
     }
@@ -74,8 +74,8 @@ public abstract class JedisClusterConnectionHandler implements Closeable {
     cache.renewClusterSlots(null);
   }
 
-  public void renewSlotCache(CuckooJedis cuckooJedis) {
-    cache.renewClusterSlots(cuckooJedis);
+  public void renewSlotCache(Jedis jedis) {
+    cache.renewClusterSlots(jedis);
   }
 
   @Override
