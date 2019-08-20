@@ -1318,5 +1318,44 @@ public class Client extends BinaryClient implements Commands {
     cfloadchunk(SafeEncoder.encode(key), value);
   }
 
+  @Override
+  public void bfreserve(String key, String... value) {
+    bfreserve(SafeEncoder.encode(key), SafeEncoder.encodeMany(value));
+  }
+
+  @Override
+  public void bfadd(String key, String value) {
+    cfadd(SafeEncoder.encode(key), SafeEncoder.encode(value));
+  }
+
+  @Override
+  public void bfmadd(String key, String... value) {
+    bfmadd(SafeEncoder.encode(key), SafeEncoder.encodeMany(value));
+  }
+
+  @Override
+  public void bfinsert(String key, String... value) {
+    bfinsert(SafeEncoder.encode(key), SafeEncoder.encodeMany(value));
+  }
+
+  @Override
+  public void bfexists(String key, String value) {
+    bfexists(SafeEncoder.encode(key), SafeEncoder.encode(value));
+  }
+
+  @Override
+  public void bfmexists(String key, String... value) {
+    bfmexists(SafeEncoder.encode(key), SafeEncoder.encodeMany(value));
+  }
+
+  @Override
+  public void bfscandump(String key, String value) {
+    bfscandump(SafeEncoder.encode(key), SafeEncoder.encode(value));
+  }
+
+  @Override
+  public void bfloadchunk(String key, byte[][] value) {
+    bfloadchunk(SafeEncoder.encode(key), value);
+  }
 
 }

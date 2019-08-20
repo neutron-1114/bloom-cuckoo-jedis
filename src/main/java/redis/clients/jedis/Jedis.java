@@ -3983,5 +3983,86 @@ public class Jedis extends BinaryJedis implements JedisCommands, MultiKeyCommand
     return client.getStatusCodeReply();
   }
 
+  public String bfreverse(final String key, final Long error_rate, final Long capacity) {
+    checkIsInMultiOrPipeline();
+    client.bfreserve(key, String.valueOf(error_rate), String.valueOf(capacity));
+    return client.getStatusCodeReply();
+  }
+
+  public Long bfadd(final String key, final String value) {
+    checkIsInMultiOrPipeline();
+    client.bfadd(key, value);
+    return client.getIntegerReply();
+  }
+
+  public Long bfmadd(final String key, final String... value) {
+    checkIsInMultiOrPipeline();
+    client.bfmadd(key, value);
+    return client.getIntegerReply();
+  }
+
+  public List<Long> bfinsert(final String key, final String... value) {
+    checkIsInMultiOrPipeline();
+    String[] vars = new String[value.length + 1];
+    System.arraycopy(value, 0, vars, 1, value.length);
+    vars[0] = "ITEMS";
+    client.bfinsert(key, vars);
+    return client.getIntegerMultiBulkReply();
+  }
+
+  public List<Long> bfinsert(final String key, final Long error_rate, final Long capacity, final String... value) {
+    checkIsInMultiOrPipeline();
+    String[] vars = new String[value.length + 5];
+    System.arraycopy(value, 0, vars, 5, value.length);
+    vars[0] = "CAPACITY";
+    vars[1] = String.valueOf(capacity);
+    vars[2] = "ERROR";
+    vars[3] = String.valueOf(error_rate);
+    vars[4] = "ITEMS";
+    client.bfinsert(key, vars);
+    return client.getIntegerMultiBulkReply();
+  }
+
+  public List<Long> bfinsertnocreate(final String key, final String... value) {
+    checkIsInMultiOrPipeline();
+    String[] vars = new String[value.length + 2];
+    System.arraycopy(value, 0, vars, 2, value.length);
+    vars[0] = "NOCREATE";
+    vars[1] = "ITEMS";
+    client.bfinsert(key, vars);
+    return client.getIntegerMultiBulkReply();
+  }
+
+  public Long bfexists(final String key, final String value) {
+    checkIsInMultiOrPipeline();
+    client.bfexists(key, value);
+    return client.getIntegerReply();
+  }
+
+  public List<Long> bfmexists(final String key, final String... value) {
+    checkIsInMultiOrPipeline();
+    client.bfmexists(key, value);
+    return client.getIntegerMultiBulkReply();
+  }
+
+  public DumpObject bfscandump(final String key, final String cursor) {
+    checkIsInMultiOrPipeline();
+    client.bfscandump(key, cursor);
+    List<Object> result = client.getObjectMultiBulkReply();
+    String newcursor = String.valueOf((long)result.get(0));
+    byte[] rawResults = (byte[]) result.get(1);
+    if(rawResults == null && newcursor.equals("0")) {
+      return new DumpObject("0", null);
+    }
+    return new DumpObject(newcursor, rawResults);
+  }
+
+  public String bfloadchunk(final String key, final String cursor, final byte[] data) {
+    checkIsInMultiOrPipeline();
+    byte[][] bytes = {SafeEncoder.encode(cursor), data};
+    client.bfloadchunk(key, bytes);
+    return client.getStatusCodeReply();
+  }
+
 
 }

@@ -21,7 +21,16 @@ public interface Commands {
   
   void set(String key, String value);
 
-  //tongzi modifiy
+  //jinxlbj modifiy
+  void bfreserve(String key, String... value);
+  void bfadd(String key, String value);
+  void bfmadd(String key, String... value);
+  void bfinsert(String key, String... value);
+  void bfexists(String key, String value);
+  void bfmexists(String key, String... value);
+  void bfscandump(String key, String value);
+  void bfloadchunk(String key, byte[][] value);
+
   void cfreserve(String key, String value);
   void cfadd(String key, String value);
   void cfaddnx(String key, String value);

@@ -1455,7 +1455,39 @@ public class BinaryClient extends Connection {
       sendCommand(XCLAIM, arguments.toArray(new byte[arguments.size()][]));
   }
 
-  //tongzi modifiy start
+  //jinxlbj modifiy start
+  public void bfreserve(final byte[] key, final byte[]... value) {
+    sendCommand(BF_RESERVE, joinParameters(key, value));
+  }
+
+  public void bfadd(final byte[] key, final byte[] value) {
+    sendCommand(BF_ADD, key, value);
+  }
+
+  public void bfmadd(final byte[] key, final byte[]... value) {
+    sendCommand(BF_MADD, joinParameters(key, value));
+  }
+
+  public void bfinsert(final byte[] key, final byte[]... value) {
+    sendCommand(BF_INSERT, joinParameters(key, value));
+  }
+
+  public void bfexists(final byte[] key, final byte[] value) {
+    sendCommand(BF_EXISTS, key, value);
+  }
+
+  public void bfmexists(final byte[] key, final byte[]... value) {
+    sendCommand(BF_MEXISTS, joinParameters(key, value));
+  }
+
+  public void bfscandump(final byte[] key, final byte[] value) {
+    sendCommand(BF_SCANDUMP, key, value);
+  }
+
+  public void bfloadchunk(final byte[] key, final byte[]... value) {
+    sendCommand(BF_LOADCHUNK, joinParameters(key, value));
+  }
+
   public void cfreserve(final byte[] key, final byte[] value) {
     sendCommand(CF_RESERVE, key, value);
   }
