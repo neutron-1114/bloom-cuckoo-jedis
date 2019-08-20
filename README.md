@@ -1,8 +1,11 @@
 # bloom-cuckoo-jedis
 
-modifiy xetorthio/jedis to support bloom/cuckoo filter
+modifiy xetorthio/jedis to support RedisBloom/RedisBloom
 
 xetorthio/jedis https://github.com/xetorthio/jedis
+RedisBloom/RedisBloom https://github.com/RedisBloom/RedisBloom
+
+for now support : bloom/cuckoo filiter
 
 ### example
 
