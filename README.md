@@ -1,6 +1,8 @@
 # bloom-cuckoo-jedis
 
-modifiy the jedis to support bloom/cuckoo filter
+modifiy xetorthio/jedis to support bloom/cuckoo filter
+
+xetorthio/jedis https://github.com/xetorthio/jedis
 
 ### example
 
